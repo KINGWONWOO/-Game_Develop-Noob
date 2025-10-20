@@ -1,0 +1,12 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-AdvancedSteamSessions-0039.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:/Users/qudtn/UnrealEngine/NoobGame/Intermediate/Build/Win64/x64/NoobGameEditor/Development/UnrealEd/SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h.obj"
+"C:/Users/qudtn/UnrealEngine/NoobGame/Plugins/AdvancedSteamSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSteamSessions/Module.AdvancedSteamSessions.cpp.obj"
+"C:/Users/qudtn/UnrealEngine/NoobGame/Plugins/AdvancedSteamSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSteamSessions/Default.rc2.res"
+/OUT:"C:/Users/qudtn/UnrealEngine/NoobGame/Plugins/AdvancedSteamSessions/Intermediate/Build/Win64/x64/UnrealEditor/Development/AdvancedSteamSessions/UnrealEditor-AdvancedSteamSessions-0039.lib"

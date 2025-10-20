@@ -171,7 +171,14 @@
             "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\classes\\steamwsrequestugcdetailscallbackproxy.h",
             "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\intermediate\\build\\win64\\unrealeditor\\inc\\advancedsteamsessions\\uht\\steamwsrequestugcdetailscallbackproxy.generated.h",
             "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\advancedsteamsessions\\permoduleinline.gen.cpp",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl"
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\private\\advancedsteamfriendslibrary.cpp",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsessions\\source\\advancedsessions\\classes\\onlinesubsystemheader.h",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\private\\advancedsteamsessions.cpp",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\classes\\advancedsteamsessions.h",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\private\\advancedsteamworkshoplibrary.cpp",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\private\\steamrequestgroupofficerscallbackproxy.cpp",
+            "c:\\users\\qudtn\\unrealengine\\noobgame\\plugins\\advancedsteamsessions\\source\\advancedsteamsessions\\private\\steamwsrequestugcdetailscallbackproxy.cpp"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
