@@ -1,18 +1,18 @@
-// FruitGameMode.cpp
-
 #include "FruitGame/FruitGameMode.h"
 #include "FruitGame/FruitGameState.h"
 #include "FruitGame/FruitPlayerState.h"
 #include "FruitGame/FruitPlayerController.h"
+#include "GameFramework/Controller.h"
 #include "FruitGame/InteractableFruitObject.h"
 #include "FruitGame/SubmitGuessButton.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "TimerManager.h" 
-#include "GameFramework/Character.h" 
+#include "TimerManager.h"
+#include "GameFramework/Character.h"
 #include "NoobGame/NoobGameCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h" 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimMontage.h"
+#include "Engine/TargetPoint.h"
 
 AFruitGameMode::AFruitGameMode()
 {
@@ -23,10 +23,9 @@ AFruitGameMode::AFruitGameMode()
 	MyGameState = nullptr;
 	NumPlayersReady_Setup = 0;
 	SpinnerResultIndex = -1;
-	PunchPushForce = 50000.0f;
-	KnockdownDuration = 3.0f;
 }
 
+// ... (PostLogin 부터 PlayerRequestsStartTurn 까지는 기존 코드와 동일) ...
 void AFruitGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -34,9 +33,36 @@ void AFruitGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		MyGameState = GetGameState<AFruitGameState>();
 	}
+
+	if (NewPlayer && MyGameState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Server] PostLogin: Player %s joined. Total Players: %d. Current Phase: %s"),
+			*NewPlayer->GetName(), GetNumPlayers(), *UEnum::GetValueAsString(MyGameState->CurrentGamePhase));
+	}
+
 	if (MyGameState && GetNumPlayers() == 2)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Server] PostLogin: 2 players detected. Changing phase to GP_Instructions."));
 		MyGameState->CurrentGamePhase = EGamePhase::GP_Instructions;
+	}
+}
+
+void AFruitGameMode::OnTurnTimerExpired()
+{
+	EndTurn(true);
+}
+
+void AFruitGameMode::StartTurn()
+{
+	if (!MyGameState || !MyGameState->CurrentActivePlayer) return;
+	MyGameState->ServerTimeAtTurnStart = GetWorld()->GetTimeSeconds();
+
+	GetWorldTimerManager().SetTimer(TurnTimerHandle, this, &AFruitGameMode::OnTurnTimerExpired, TurnDuration, false);
+
+	AFruitPlayerController* ActivePC = Cast<AFruitPlayerController>(MyGameState->CurrentActivePlayer->GetPlayerController());
+	if (ActivePC)
+	{
+		ActivePC->Client_StartTurn();
 	}
 }
 
@@ -80,8 +106,10 @@ void AFruitGameMode::CheckBothPlayersReady_Instructions()
 			ReadyPlayers++;
 		}
 	}
+
 	if (ReadyPlayers == 2)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Server] ... 2명 모두 준비됨. 페이즈를 GP_Setup로 변경합니다."));
 		MyGameState->CurrentGamePhase = EGamePhase::GP_Setup;
 	}
 }
@@ -101,8 +129,10 @@ void AFruitGameMode::PlayerSubmittedFruits(AController* PlayerController, const 
 
 void AFruitGameMode::CheckBothPlayersReady_Setup()
 {
+
 	if (NumPlayersReady_Setup == 2)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Server] ... 2명 모두 제출함. 페이즈를 GP_SpinnerTurn로 변경합니다."));
 		StartSpinnerPhase();
 	}
 }
@@ -133,25 +163,6 @@ void AFruitGameMode::PlayerRequestsStartTurn(AController* PlayerController)
 	StartTurn();
 }
 
-
-// --- 4. PlayerTurn 단계 ---
-void AFruitGameMode::StartTurn()
-{
-	if (!MyGameState || !MyGameState->CurrentActivePlayer) return;
-	MyGameState->ServerTimeAtTurnStart = GetWorld()->GetTimeSeconds();
-	GetWorldTimerManager().SetTimer(TurnTimerHandle, this, &AFruitGameMode::OnTurnTimerExpired, TurnDuration, false);
-	AFruitPlayerController* ActivePC = Cast<AFruitPlayerController>(MyGameState->CurrentActivePlayer->GetPlayerController());
-	if (ActivePC)
-	{
-		ActivePC->Client_StartTurn();
-	}
-}
-
-void AFruitGameMode::OnTurnTimerExpired()
-{
-	EndTurn(true);
-}
-
 bool AFruitGameMode::IsPlayerTurn(AController* PlayerController) const
 {
 	if (!MyGameState || !PlayerController || !PlayerController->PlayerState) return false;
@@ -164,7 +175,7 @@ void AFruitGameMode::ProcessGuessFromWorldObjects(AController* PlayerController)
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AInteractableFruitObject::StaticClass(), FoundActors);
 	if (FoundActors.Num() != 5)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ProcessGuessFromWorldObjects: 5개의 추측(Guessing) 오브젝트를 찾을 수 없습니다."));
+		UE_LOG(LogTemp, Warning, TEXT("ProcessGuessFromWorldObjects: 5 guessing objects not found."));
 		return;
 	}
 	FoundActors.Sort([](const AActor& A, const AActor& B) {
@@ -194,10 +205,11 @@ void AFruitGameMode::ProcessGuessFromWorldObjects(AController* PlayerController)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("ProcessGuessFromWorldObjects: 추측(Guessing) 오브젝트의 GuessIndex가 잘못 설정되었습니다. (0-4)"));
+		UE_LOG(LogTemp, Error, TEXT("ProcessGuessFromWorldObjects: Guessing object GuessIndex is invalid (0-4)."));
 	}
 }
 
+// --- [수정됨] ProcessPlayerGuess는 EndGame을 호출하는 유일한 경로입니다 ---
 void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TArray<EFruitType>& GuessedFruits)
 {
 	if (!IsPlayerTurn(PlayerController)) return;
@@ -213,6 +225,7 @@ void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TAr
 		}
 	}
 	if (!OpponentPS) return;
+
 	const TArray<EFruitType>& OpponentSecret = OpponentPS->GetSecretAnswers_Server();
 	int32 MatchCount = 0;
 	for (int32 i = 0; i < 5; ++i)
@@ -223,6 +236,7 @@ void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TAr
 			MatchCount++;
 		}
 	}
+
 	AFruitPlayerController* GuesserPC = Cast<AFruitPlayerController>(PlayerController);
 	AFruitPlayerController* OpponentPC = Cast<AFruitPlayerController>(OpponentPS->GetPlayerController());
 	if (GuesserPC)
@@ -233,8 +247,11 @@ void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TAr
 	{
 		OpponentPC->Client_OpponentGuessed(GuessedFruits, MatchCount);
 	}
+
+	// [핵심]
 	if (MatchCount == 5)
 	{
+		// 과일을 5개 맞췄을 때만 EndGame 호출
 		EndGame(PlayerController->PlayerState);
 	}
 	else
@@ -266,29 +283,173 @@ void AFruitGameMode::EndTurn(bool bTimeOut)
 	}
 	else
 	{
-		EndGame(nullptr);
+		EndGame(nullptr); // 비기는 경우
 	}
 }
 
-void AFruitGameMode::EndGame(APlayerState* Winner)
+
+// --- [대폭 수정] ProcessPunch는 4초 K.O. 타이머만 겁니다 ---
+void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter)
 {
-	if (!MyGameState) return;
-	MyGameState->CurrentGamePhase = EGamePhase::GP_GameOver;
-	MyGameState->Winner = Winner;
-	GetWorldTimerManager().ClearTimer(TurnTimerHandle);
-	if (MyGameState) MyGameState->ServerTimeAtTurnStart = 0.0f;
-	for (APlayerState* PS : MyGameState->PlayerArray)
+	if (!HitCharacter || !HitCharacter->GetController() || !PuncherController || !PuncherController->GetPawn()) return;
+
+	AFruitPlayerState* HitPlayerState = HitCharacter->GetController()->GetPlayerState<AFruitPlayerState>();
+
+	// 이미 K.O. 상태이거나 게임이 끝났으면 무시
+	if (!MyGameState || !HitPlayerState || HitPlayerState->bIsKnockedDown || MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver) return;
+
+	const FVector PunchDirection = (HitCharacter->GetActorLocation() - PuncherController->GetPawn()->GetActorLocation()).GetSafeNormal();
+	HitCharacter->GetCharacterMovement()->AddImpulse(PunchDirection * PunchPushForce, true);
+
+	HitPlayerState->PunchHitCount++;
+
+	if (HitPlayerState->PunchHitCount >= 10)
 	{
-		AFruitPlayerController* PC = Cast<AFruitPlayerController>(PS->GetPlayerController());
-		if (PC)
+		// [핵심] K.O. 상태 시작
+		HitPlayerState->bIsKnockedDown = true;
+		HitPlayerState->PunchHitCount = 0;
+
+		ANoobGameCharacter* HitChar = Cast<ANoobGameCharacter>(HitCharacter);
+		if (HitChar)
 		{
-			PC->Client_GameOver(PS == Winner);
+			HitChar->SetRagdollState_Server(true); // 래그돌 활성화
+		}
+
+		if (AFruitPlayerController* HitPC = Cast<AFruitPlayerController>(HitCharacter->GetController()))
+		{
+			HitPC->Client_SetCameraEffect(true); // 카메라 효과 활성화
+		}
+
+		// [핵심] 4초 뒤 RecoverCharacter를 호출하는 타이머 설정
+		FTimerHandle KnockdownTimer;
+		FTimerDelegate TimerDel = FTimerDelegate::CreateUObject(this, &AFruitGameMode::RecoverCharacter, HitCharacter);
+		GetWorldTimerManager().SetTimer(KnockdownTimer, TimerDel, KnockdownDuration, false);
+
+		// 다중 K.O.를 대비해 타이머 핸들 저장
+		KnockdownTimers.Add(HitCharacter, KnockdownTimer);
+	}
+	else
+	{
+		// 10대 미만 피격 반응 (기존과 동일)
+		ANoobGameCharacter* HitChar = Cast<ANoobGameCharacter>(HitCharacter);
+		if (!HitChar) return;
+
+		const FVector HitVector = (HitCharacter->GetActorLocation() - PuncherController->GetPawn()->GetActorLocation()).GetSafeNormal();
+		const FVector ActorForward = HitChar->GetActorForwardVector();
+		const FVector ActorRight = HitChar->GetActorRightVector();
+		float ForwardDot = FVector::DotProduct(HitVector, ActorForward);
+		float RightDot = FVector::DotProduct(HitVector, ActorRight);
+
+		UAnimMontage* SelectedMontage = nullptr;
+		if (FMath::Abs(ForwardDot) > FMath::Abs(RightDot))
+		{
+			SelectedMontage = (ForwardDot > 0) ? HitChar->HitReaction_Back : HitChar->HitReaction_Front;
+		}
+		else
+		{
+			SelectedMontage = (RightDot > 0) ? HitChar->HitReaction_Right : HitChar->HitReaction_Left;
+		}
+		if (!SelectedMontage)
+		{
+			SelectedMontage = HitChar->HitReaction_Front;
+		}
+		if (MyGameState && SelectedMontage)
+		{
+			for (APlayerState* PS : MyGameState->PlayerArray)
+			{
+				AFruitPlayerController* PC = Cast<AFruitPlayerController>(PS->GetPlayerController());
+				if (PC)
+				{
+					PC->Multicast_PlayHitReaction(HitCharacter, SelectedMontage);
+				}
+			}
 		}
 	}
 }
 
-// --- 5. 펀치 기능 ---
+// --- [수정됨] EndGame은 5초 타이머를 시작하지 않습니다 ---
+void AFruitGameMode::EndGame(APlayerState* Winner)
+{
+	if (!MyGameState || MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("[Server GM] EndGame Started. Winner: %s"), Winner ? *Winner->GetPlayerName() : TEXT("None"));
+
+	MyGameState->CurrentGamePhase = EGamePhase::GP_GameOver;
+	MyGameState->Winner = Winner;
+	GetWorldTimerManager().ClearTimer(TurnTimerHandle);
+	MyGameState->ServerTimeAtTurnStart = 0.0f;
+
+	// [수정] 진행 중이던 모든 K.O. 타이머를 강제로 클리어합니다.
+	for (auto& TimerPair : KnockdownTimers)
+	{
+		GetWorldTimerManager().ClearTimer(TimerPair.Value);
+	}
+	KnockdownTimers.Empty();
+
+	// --- 1. 승자와 패자 PlayerState 찾기 ---
+	APlayerState* Loser = nullptr;
+	for (APlayerState* PS : MyGameState->PlayerArray)
+	{
+		if (PS && PS != Winner)
+		{
+			Loser = PS;
+			break;
+		}
+	}
+	if (!Winner || !Loser)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Server GM] EndGame: Could not find Winner or Loser!"), MyGameState->PlayerArray.Num());
+		return;
+	}
+
+	// --- 2. 스폰 지점 및 카메라 찾기 ---
+	TArray<AActor*> WinnerSpawns;
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ATargetPoint::StaticClass(), FName("Result_Spawn_Winner"), WinnerSpawns);
+	AActor* WinnerSpawnPoint = (WinnerSpawns.Num() > 0) ? WinnerSpawns[0] : nullptr;
+
+	TArray<AActor*> DefeatSpawns;
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ATargetPoint::StaticClass(), FName("Result_Spawn_Defeat"), DefeatSpawns);
+	AActor* DefeatSpawnPoint = (DefeatSpawns.Num() > 0) ? DefeatSpawns[0] : nullptr;
+
+	TArray<AActor*> CameraActors;
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ACameraActor::StaticClass(), FName("EndingCamera"), CameraActors);
+	ACameraActor* EndingCamera = (CameraActors.Num() > 0) ? Cast<ACameraActor>(CameraActors[0]) : nullptr;
+
+
+	if (!WinnerSpawnPoint || !DefeatSpawnPoint || !EndingCamera)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Server GM] EndGame: FAILED to find TargetPoints or EndingCamera!"));
+	}
+
+	// --- 3. 승자 캐릭터 타입 설정 (GameState용) ---
+	AFruitPlayerController* WinnerPC = Cast<AFruitPlayerController>(Winner->GetPlayerController());
+	ANoobGameCharacter* WinnerPawn = WinnerPC ? Cast<ANoobGameCharacter>(WinnerPC->GetPawn()) : nullptr;
+	if (WinnerPawn)
+	{
+		if (WinnerPawn->ActorHasTag(FName("Cat"))) MyGameState->WinningCharacterType = ECharacterType::ECT_Cat;
+		else if (WinnerPawn->ActorHasTag(FName("Dog"))) MyGameState->WinningCharacterType = ECharacterType::ECT_Dog;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("[Server GM] EndGame: WinnerType set to %s"), *UEnum::GetValueAsString(MyGameState->WinningCharacterType));
+
+	// --- 4. 각 PlayerController에게 [서버에서] 엔딩 처리를 위임 ---
+	AFruitPlayerController* LoserPC = Cast<AFruitPlayerController>(Loser->GetPlayerController());
+
+	if (WinnerPC && WinnerSpawnPoint && EndingCamera)
+	{
+		WinnerPC->Server_SetupEnding(true, WinnerSpawnPoint->GetActorLocation(), WinnerSpawnPoint->GetActorRotation(), MyGameState->WinningCharacterType, EndingCamera);
+	}
+
+	if (LoserPC && DefeatSpawnPoint && EndingCamera)
+	{
+		LoserPC->Server_SetupEnding(false, DefeatSpawnPoint->GetActorLocation(), DefeatSpawnPoint->GetActorRotation(), MyGameState->WinningCharacterType, EndingCamera);
+	}
+
+	// --- [수정] 5초 타이머 설정 제거 ---
+	// GetWorldTimerManager().SetTimer(TimerHandle_EndGameRestore, this, &AFruitGameMode::RestorePlayerControl, 5.0f, false);
+	UE_LOG(LogTemp, Warning, TEXT("[Server GM] EndGame Finished. (Manual Restore Required)"));
+}
+
+// --- 5. 펀치 애니메이션 ---
 void AFruitGameMode::ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimMontage* MontageToPlay)
 {
 	if (!MyGameState || !PunchingCharacter || !MontageToPlay) return;
@@ -303,85 +464,34 @@ void AFruitGameMode::ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimM
 	}
 }
 
-/** (수정!) 펀치 '적중' 처리 함수 (래그돌 및 카메라 효과 제어) */
-void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter)
-{
-	if (!HitCharacter || !HitCharacter->GetController()) return;
-
-	AFruitPlayerState* HitPlayerState = HitCharacter->GetController()->GetPlayerState<AFruitPlayerState>();
-	AFruitGameState* GS = GetGameState<AFruitGameState>();
-
-	if (!HitPlayerState || !GS || HitPlayerState->bIsKnockedDown)
-	{
-		return;
-	}
-
-	FVector PunchDirection = (HitCharacter->GetActorLocation() - PuncherController->GetPawn()->GetActorLocation()).GetSafeNormal();
-	PunchDirection.Z = 0.2f;
-	HitCharacter->GetCharacterMovement()->AddImpulse(PunchDirection * PunchPushForce, true);
-
-	HitPlayerState->PunchHitCount++;
-
-	if (HitPlayerState->PunchHitCount >= 10)
-	{
-		HitPlayerState->bIsKnockedDown = true;
-		HitPlayerState->PunchHitCount = 0;
-
-		ANoobGameCharacter* HitChar = Cast<ANoobGameCharacter>(HitCharacter);
-		if (HitChar)
-		{
-			HitChar->SetRagdollState_Server(true);
-		}
-
-		if (AFruitPlayerController* HitPC = Cast<AFruitPlayerController>(HitCharacter->GetController()))
-		{
-			HitPC->Client_SetCameraEffect(true);
-		}
-
-		FTimerHandle RecoveryTimerHandle;
-		FTimerDelegate RecoveryDelegate;
-		RecoveryDelegate.BindUFunction(this, FName("RecoverCharacter"), HitCharacter);
-		GetWorldTimerManager().SetTimer(RecoveryTimerHandle, RecoveryDelegate, KnockdownDuration, false);
-	}
-	else
-	{
-		ANoobGameCharacter* HitChar = Cast<ANoobGameCharacter>(HitCharacter);
-		UAnimMontage* HitMontage = HitChar ? HitChar->HitReactionMontage : nullptr;
-
-		if (GS && HitMontage)
-		{
-			for (APlayerState* PS : GS->PlayerArray)
-			{
-				AFruitPlayerController* PC = Cast<AFruitPlayerController>(PS->GetPlayerController());
-				if (PC)
-				{
-					PC->Multicast_PlayHitReaction(HitCharacter, HitMontage);
-				}
-			}
-		}
-	}
-}
-
-/** (수정!) 캐릭터 회복 함수 (래그돌 해제만 지시) */
+// --- [수정됨] K.O.에서 회복시키는 함수 ---
 void AFruitGameMode::RecoverCharacter(ACharacter* CharacterToRecover)
 {
 	if (!CharacterToRecover || !CharacterToRecover->GetController()) return;
 
+	// 타이머 핸들 맵에서 제거
+	KnockdownTimers.Remove(CharacterToRecover);
+
+	// 게임이 그 사이에 끝났다면 아무것도 하지 않음 (EndGame이 이미 래그돌을 풀었을 것임)
+	if (MyGameState && MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver)
+	{
+		return;
+	}
+
 	AFruitPlayerState* PS = CharacterToRecover->GetController()->GetPlayerState<AFruitPlayerState>();
 	if (PS && PS->bIsKnockedDown)
 	{
-		PS->bIsKnockedDown = false;
+		PS->bIsKnockedDown = false; // K.O. 상태 해제
 
 		ANoobGameCharacter* RecoverChar = Cast<ANoobGameCharacter>(CharacterToRecover);
 		if (RecoverChar)
 		{
-			RecoverChar->SetRagdollState_Server(false);
+			RecoverChar->SetRagdollState_Server(false); // 래그돌 해제
 		}
 
-		// (삭제!) 카메라 효과 해제 로직을 NoobGameCharacter의 타이머로 이동시켰습니다.
-		// if (AFruitPlayerController* RecoverPC = Cast<AFruitPlayerController>(CharacterToRecover->GetController()))
-		// {
-		// 	RecoverPC->Client_SetCameraEffect(false);
-		// }
+		if (AFruitPlayerController* RecoverPC = Cast<AFruitPlayerController>(CharacterToRecover->GetController()))
+		{
+			RecoverPC->Client_SetCameraEffect(false); // 카메라 효과 해제
+		}
 	}
 }

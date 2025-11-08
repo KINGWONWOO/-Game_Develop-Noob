@@ -1,16 +1,11 @@
 // FruitPlayerState.h
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "FruitGame/FruitGameTypes.h"
+#include "GameFramework/Pawn.h"
 #include "FruitPlayerState.generated.h"
-
-// --- 델리게이트 선언 ---
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReadyStateChanged); // Setup 단계 완료
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInstructionReadyChanged); // Instructions 단계 준비 완료
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKnockdownStateChanged, bool, bIsKnockedDown); // 쓰러짐 델리게이트
 
 UCLASS()
 class NOOBGAME_API AFruitPlayerState : public APlayerState
@@ -20,72 +15,42 @@ class NOOBGAME_API AFruitPlayerState : public APlayerState
 public:
 	AFruitPlayerState();
 
-	// 리플리케이트할 변수들을 등록합니다.
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UPROPERTY(Replicated)
+	TSubclassOf<APawn> SelectedPawnClass;
 
-	// --- 정답 배열 (보안) ---
-private:
-	// 정답 과일 배열 (UPROPERTY 없음! 복제(Replicate)되지 않음!)
-	TArray<EFruitType> SecretFruitAnswers;
+	// --- (신규!) 블루프린트(UI) 및 서버(GameMode)에서 읽어야 하는 변수들 ---
 
-public:
-	// --- 서버 전용 함수 ---
-	/** [서버 전용] 플레이어의 정답 과일 배열을 설정합니다. */
-	void SetSecretAnswers_Server(const TArray<EFruitType>& Answers);
-
-	/** [서버 전용] 플레이어의 정답 과일 배열을 가져옵니다. */
-	const TArray<EFruitType>& GetSecretAnswers_Server() const;
-
-	/** [서버 전용] 이 플레이어를 Instructions 단계에서 준비 상태로 설정합니다. */
-	void SetInstructionReady_Server();
-
-
-	// --- 준비 상태 변수 (복제됨) ---
-	/** Setup 단계에서 정답을 제출했는지 여부 */
-	UPROPERTY(ReplicatedUsing = OnRep_HasSubmittedFruits)
-	bool bHasSubmittedFruits;
-
-	/** Instructions 단계에서 준비를 눌렀는지 여부 */
-	UPROPERTY(ReplicatedUsing = OnRep_IsReady_Instructions)
+	/** (수정!) Instructions 단계 준비 완료 여부 */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
 	bool bIsReady_Instructions;
 
-	// --- 펀치 관련 변수 (복제됨) ---
-	/** 펀치 맞은 횟수 */
+	/** (수정!) Setup 단계 과일 제출 완료 여부 */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
+	bool bHasSubmittedFruits;
+
+	/** (수정!) 이 플레이어의 비밀 정답 (서버에만 저장되고 복제됨) */
 	UPROPERTY(Replicated)
-	int32 PunchHitCount = 0;
+	TArray<EFruitType> SecretAnswers;
 
-	/** 현재 쓰러져 있는지 여부 */
-	UPROPERTY(ReplicatedUsing = OnRep_KnockedDown)
-	bool bIsKnockedDown = false;
+	/** (수정!) 현재 펀치 맞은 횟수 (쓰러짐 판정용) */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Combat")
+	int32 PunchHitCount;
 
-	/** (신규!) 다음 펀치가 왼쪽인지 여부 (서버가 관리, 모든 클라에 복제) */
-	UPROPERTY(Replicated)
-	bool bIsNextPunchLeft = true;
+	/** (수정!) 현재 쓰러진 상태인지 여부 */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Combat")
+	bool bIsKnockedDown;
 
-	// --- 함수 ---
-	/** bIsKnockedDown 값이 클라이언트에서 변경될 때 호출될 함수 */
-	UFUNCTION()
-	void OnRep_KnockedDown();
+	/** (수정!) 다음 펀치가 왼쪽인지 여부 */
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Combat")
+	bool bIsNextPunchLeft;
 
-	// --- UI 바인딩용 델리게이트 ---
-	/** Setup 단계 정답 제출 상태 변경 시 호출 */
-	UPROPERTY(BlueprintAssignable, Category = "Player State")
-	FOnReadyStateChanged OnReadyStateChanged;
-
-	/** Instructions 단계 준비 상태 변경 시 호출 */
-	UPROPERTY(BlueprintAssignable, Category = "Player State")
-	FOnInstructionReadyChanged OnInstructionReadyChanged;
-
-	/** 캐릭터 BP가 이 델리게이트에 바인딩(구독)합니다. */
-	UPROPERTY(BlueprintAssignable, Category = "Combat")
-	FOnKnockdownStateChanged OnKnockdownStateChanged;
+	// --- (기존 함수들) ---
+	// (이 함수들은 서버에서 호출되어야 합니다)
+	void SetInstructionReady_Server();
+	void SetSecretAnswers_Server(const TArray<EFruitType>& SecretFruits);
+	const TArray<EFruitType>& GetSecretAnswers_Server() const;
 
 protected:
-	/** bHasSubmittedFruits 변수가 복제될 때 클라이언트에서 호출됨 */
-	UFUNCTION()
-	void OnRep_HasSubmittedFruits();
-
-	/** bIsReady_Instructions 변수가 복제될 때 클라이언트에서 호출됨 */
-	UFUNCTION()
-	void OnRep_IsReady_Instructions();
+	/** (신규!) 리플리케이션(복제) 설정 함수 선언 */
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

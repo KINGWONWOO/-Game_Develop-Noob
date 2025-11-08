@@ -7,7 +7,7 @@
 #include "LobbyGameMode.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class NOOBGAME_API ALobbyGameMode : public AGameModeBase

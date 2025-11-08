@@ -1,16 +1,16 @@
-// FruitPlayerController.h
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "FruitGame/FruitGameTypes.h"
+#include "Camera/CameraActor.h"
 #include "FruitPlayerController.generated.h"
 
 // --- 전방 선언 ---
 class AInteractableFruitObject;
 class ACharacter;
 class UAnimMontage;
+class ACameraActor; // ACameraActor 전방 선언 추가
 
 // --- 델리게이트 선언 ---
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTurnStarted);
@@ -25,11 +25,10 @@ class NOOBGAME_API AFruitPlayerController : public APlayerController
 	GENERATED_BODY()
 
 private:
-	// 로컬 정답 저장용 변수
 	TArray<EFruitType> MyLocalSecretAnswers;
 
 public:
-	// --- UI 및 캐릭터에서 호출할 함수들 (BlueprintCallable) ---
+	// --- UI 및 캐릭터에서 호출할 함수들 ---
 	UFUNCTION(BlueprintCallable, Category = "Fruit Game")
 	void PlayerReady();
 	UFUNCTION(BlueprintCallable, Category = "Fruit Game")
@@ -45,6 +44,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void RequestPlayPunchMontage();
 
+	/** [신규] 블루프린트에서 호출하여 이동 및 입력을 복구하는 함수 */
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void RequestRestoreMovementAndInput();
+
+
 	// --- 블루프린트 구현 이벤트 ---
 	UFUNCTION(BlueprintImplementableEvent, Category = "Fruit Game|Animation")
 	void PlaySpinnerAnimationEvent(int32 WinningPlayerIndex);
@@ -53,9 +57,17 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void PlayPunchEvent(ACharacter* PunchingCharacter, bool bIsLeftPunch);
 
-	/** (신규!) 카메라 높이 및 비네팅 효과를 적용/해제하는 블루프린트 이벤트 */
+	/** 래그돌 카메라 효과 (비네팅) */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat|Camera")
 	void ApplyKnockdownCameraEffect(bool bEnableEffect);
+
+	/** (수정!) 승자 타입과 나의 승리 여부를 블루프린트로 전달 */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game")
+	void Event_ShowResultsScreen(ECharacterType WinnerType, bool bYouWon);
+
+	/** (신규!) 게임 종료 시 모든 입력/UI를 정리하고 연출 카메라로 전환하는 BP 이벤트 */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game")
+	void Event_SetupResultsScreen();
 
 	// --- 서버 -> 클라이언트 RPC ---
 	UFUNCTION(Client, Reliable)
@@ -65,21 +77,29 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_OpponentGuessed(const TArray<EFruitType>& Guess, int32 MatchCount);
 	UFUNCTION(Client, Reliable)
-	void Client_GameOver(bool bYouWon);
-	UFUNCTION(Client, Reliable)
 	void Client_PlaySpinnerAnimation(int32 WinningPlayerIndex);
 
-	/** 피격 애니메이션 재생 */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayHitReaction(ACharacter* TargetCharacter, UAnimMontage* MontageToPlay);
-
-	/** 펀치 애니메이션 재생 */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayPunchMontage(ACharacter* PunchingCharacter, UAnimMontage* MontageToPlay);
 
-	/** (신규!) 쓰러졌을 때 카메라 시점/PostProcess 효과를 변경하도록 클라이언트에 지시 */
 	UFUNCTION(Client, Reliable)
 	void Client_SetCameraEffect(bool bEnableKnockdownEffect);
+
+	UFUNCTION(Client, Reliable)
+	void Client_SetUIOnlyInput(bool bYouWon, ECharacterType WinnerType, ACameraActor* EndingCamera);
+
+	/** [기존] 5초 후 게임 모드로 복구하는 RPC */
+	UFUNCTION(Client, Reliable)
+	void Client_SetGameOnlyInput();
+
+	/** [수정] GameMode가 호출할 엔딩 처리 함수 (서버 실행, 카메라 참조 포함) */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SetupEnding(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera);
+	bool Server_SetupEnding_Validate(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera);
+	void Server_SetupEnding_Implementation(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera);
+
 
 	// --- UI 바인딩용 델리게이트 ---
 	UPROPERTY(BlueprintAssignable, Category = "Fruit Game")
@@ -122,4 +142,10 @@ protected:
 	void Server_RequestPlayPunchMontage();
 	bool Server_RequestPlayPunchMontage_Validate();
 	void Server_RequestPlayPunchMontage_Implementation();
+
+	/** [신규] RequestRestoreMovementAndInput이 호출할 서버 RPC */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_RequestRestoreControls();
+	bool Server_RequestRestoreControls_Validate();
+	void Server_RequestRestoreControls_Implementation();
 };

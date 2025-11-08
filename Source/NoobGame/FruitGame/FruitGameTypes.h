@@ -27,3 +27,11 @@ enum class EGamePhase : uint8
 	GP_PlayerTurn		UMETA(DisplayName = "PlayerTurn"), // 턴 진행
 	GP_GameOver			UMETA(DisplayName = "GameOver") // 게임 종료
 };
+
+UENUM(BlueprintType)
+enum class ECharacterType : uint8
+{
+	ECT_None,
+	ECT_Cat		UMETA(DisplayName = "Cat"),
+	ECT_Dog		UMETA(DisplayName = "Dog")
+};

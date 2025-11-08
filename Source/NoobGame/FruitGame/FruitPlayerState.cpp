@@ -1,81 +1,48 @@
 // FruitPlayerState.cpp
-
 #include "FruitGame/FruitPlayerState.h"
-#include "Net/UnrealNetwork.h" // DOREPLIFETIME
+#include "Net/UnrealNetwork.h" // (신규!) DOREPLIFETIME을 위해 필요
 
 AFruitPlayerState::AFruitPlayerState()
 {
-	// 변수 기본값 초기화
-	bHasSubmittedFruits = false;
+	// 변수 초기화
 	bIsReady_Instructions = false;
+	bHasSubmittedFruits = false;
 	PunchHitCount = 0;
 	bIsKnockedDown = false;
-	bIsNextPunchLeft = true; // (신규!) 기본값은 왼쪽 펀치부터
+	bIsNextPunchLeft = true;
 }
 
-void AFruitPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+// (참고) 이 함수들은 PlayerController의 Server RPC에서 호출되어야 합니다.
+void AFruitPlayerState::SetInstructionReady_Server()
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// 복제할 변수들을 등록합니다.
-	DOREPLIFETIME(AFruitPlayerState, bHasSubmittedFruits);
-	DOREPLIFETIME(AFruitPlayerState, bIsReady_Instructions);
-	DOREPLIFETIME(AFruitPlayerState, PunchHitCount);
-	DOREPLIFETIME(AFruitPlayerState, bIsKnockedDown);
-	DOREPLIFETIME(AFruitPlayerState, bIsNextPunchLeft); // (신규!) 복제 등록
+	// (참고) 이 코드는 서버에서만 실행되어야 합니다.
+	bIsReady_Instructions = true;
 }
 
-// --- 서버 전용 함수 ---
-
-void AFruitPlayerState::SetSecretAnswers_Server(const TArray<EFruitType>& Answers)
+void AFruitPlayerState::SetSecretAnswers_Server(const TArray<EFruitType>& SecretFruits)
 {
-	// 오직 서버(Authority)에서만 이 변수를 수정할 수 있도록 강제합니다.
-	if (HasAuthority())
-	{
-		SecretFruitAnswers = Answers;
-		bHasSubmittedFruits = true;
-
-		// 서버에서도 OnRep 함수를 수동으로 호출해주는 것이 좋습니다.
-		OnRep_HasSubmittedFruits();
-	}
+	// (참고) 이 코드는 서버에서만 실행되어야 합니다.
+	SecretAnswers = SecretFruits;
+	bHasSubmittedFruits = true;
 }
 
 const TArray<EFruitType>& AFruitPlayerState::GetSecretAnswers_Server() const
 {
-	return SecretFruitAnswers;
+	return SecretAnswers;
 }
 
-void AFruitPlayerState::SetInstructionReady_Server()
-{
-	// 서버에서만 실행
-	if (HasAuthority())
-	{
-		// 아직 준비가 안 된 상태일 때만 실행
-		if (!bIsReady_Instructions)
-		{
-			bIsReady_Instructions = true;
-			OnRep_IsReady_Instructions();
-		}
-	}
-}
 
-// --- OnRep 함수 (클라이언트에서 실행됨) ---
-
-void AFruitPlayerState::OnRep_HasSubmittedFruits()
+/** (신규!) 리플리케이션(복제)할 변수 등록 */
+void AFruitPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	// Setup 준비 상태가 변경되었음을 UI(블루프린트)에 알립니다.
-	OnReadyStateChanged.Broadcast();
-}
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-void AFruitPlayerState::OnRep_IsReady_Instructions()
-{
-	// Instructions 준비 상태가 변경되었음을 UI(블루프린트)에 알립니다.
-	OnInstructionReadyChanged.Broadcast();
-}
-
-/** (신규!) 쓰러짐 상태가 복제될 때 델리게이트 호출 */
-void AFruitPlayerState::OnRep_KnockedDown()
-{
-	// 쓰러짐 상태가 변경되었음을 캐릭터 BP에 알립니다.
-	OnKnockdownStateChanged.Broadcast(bIsKnockedDown);
+	// (수정!) GameState.cpp에 있던 코드를 이곳으로 이동시킵니다.
+	DOREPLIFETIME(AFruitPlayerState, bIsReady_Instructions);
+	DOREPLIFETIME(AFruitPlayerState, bHasSubmittedFruits);
+	DOREPLIFETIME(AFruitPlayerState, SecretAnswers);
+	DOREPLIFETIME(AFruitPlayerState, PunchHitCount);
+	DOREPLIFETIME(AFruitPlayerState, bIsKnockedDown);
+	DOREPLIFETIME(AFruitPlayerState, bIsNextPunchLeft);
+	DOREPLIFETIME(AFruitPlayerState, SelectedPawnClass);
 }

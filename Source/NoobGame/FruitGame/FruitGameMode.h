@@ -1,19 +1,17 @@
-// FruitGameMode.h
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "FruitGame/FruitGameTypes.h"
+#include "GameFramework/Pawn.h"
 #include "FruitGameMode.generated.h"
 
-// --- 전방 선언 ---
 class AFruitGameState;
 class AFruitPlayerState;
 class AFruitPlayerController;
 class AActor;
 class ACharacter;
-class UAnimMontage; // ProcessPunchAnimation을 위해 필요
+class UAnimMontage;
 
 UCLASS()
 class NOOBGAME_API AFruitGameMode : public AGameModeBase
@@ -23,7 +21,6 @@ class NOOBGAME_API AFruitGameMode : public AGameModeBase
 public:
 	AFruitGameMode();
 
-	// --- PlayerController가 호출하는 함수 ---
 	void PlayerIsReady(AController* PlayerController);
 	void PlayerSubmittedFruits(AController* PlayerController, const TArray<EFruitType>& SecretFruits);
 	void ProcessPlayerGuess(AController* PlayerController, const TArray<EFruitType>& GuessedFruits);
@@ -31,53 +28,63 @@ public:
 	bool IsPlayerTurn(AController* PlayerController) const;
 	void PlayerInteracted(AController* PlayerController, AActor* HitActor, EGamePhase CurrentPhase);
 
-	/** (수정!) 펀치 '애니메이션'을 모든 클라이언트에 전파 */
+	UFUNCTION(BlueprintCallable, Category = "Game")
 	void ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimMontage* MontageToPlay);
 
-	/** (기존) 펀치 '적중' 처리 */
+	UFUNCTION(BlueprintCallable, Category = "Game")
 	void ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter);
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void EndGame(APlayerState* Winner);
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
-	// --- 게임 흐름 제어 함수 ---
+	// 게임 흐름
 	void CheckBothPlayersReady_Instructions();
 	void CheckBothPlayersReady_Setup();
 	void StartSpinnerPhase();
 	void StartTurn();
 	void EndTurn(bool bTimeOut);
-	void EndGame(APlayerState* Winner);
 	void OnTurnTimerExpired();
 	void ProcessGuessFromWorldObjects(AController* PlayerController);
 
-	/** 쓰러진 캐릭터를 일정 시간 후 일으키는 함수 */
 	UFUNCTION()
 	void RecoverCharacter(ACharacter* CharacterToRecover);
 
-	/** 캐시된 GameState */
+	// [수정] 5초 타이머 함수 제거
+	// void RestorePlayerControl(); 
+
+	/** 호스트/Client 1이 사용할 폰 클래스 (BP_FirstPersonCharacter_Cat) */
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerPawn")
+	TSubclassOf<APawn> HostPawnClass;
+
+	/** 참여자/Client 2가 사용할 폰 클래스 (BP_FirstPersonCharacter_Dog) */
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerPawn")
+	TSubclassOf<APawn> ClientPawnClass;
+
 	UPROPERTY()
 	AFruitGameState* MyGameState;
 
-	/** 턴 타이머 핸들 (GP_PlayerTurn용) */
 	FTimerHandle TurnTimerHandle;
 
-	/** 턴당 제한 시간 (초) */
+	// [수정] 5초 타이머 핸들 제거
+	// FTimerHandle TimerHandle_EndGameRestore;
+
+	/** [신규] K.O. 상태인 플레이어와 복구 타이머를 매핑합니다. (TWeakObjectPtr로 안전하게) */
+	TMap<TWeakObjectPtr<ACharacter>, FTimerHandle> KnockdownTimers;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Game Rules")
 	float TurnDuration = 30.0f;
 
-	/** Setup 준비 완료 인원 */
 	int32 NumPlayersReady_Setup = 0;
 
-	/** 서버에서 결정된 돌림판 결과 (0 또는 1) */
 	UPROPERTY()
 	int32 SpinnerResultIndex = -1;
 
-	// --- 펀치 관련 변수 ---
-	/** 밀치기 힘 강도 */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float PunchPushForce = 50000.0f;
 
-	/** 쓰러짐 지속 시간 */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	float KnockdownDuration = 4.0f;
+	float KnockdownDuration = 4.0f; // 4초 K.O. 지속시간
 };
