@@ -1,6 +1,5 @@
-// FruitPlayerState.cpp
 #include "FruitGame/FruitPlayerState.h"
-#include "Net/UnrealNetwork.h" // (신규!) DOREPLIFETIME을 위해 필요
+#include "Net/UnrealNetwork.h" // DOREPLIFETIME을 위해 필요
 
 AFruitPlayerState::AFruitPlayerState()
 {
@@ -12,16 +11,16 @@ AFruitPlayerState::AFruitPlayerState()
 	bIsNextPunchLeft = true;
 }
 
-// (참고) 이 함수들은 PlayerController의 Server RPC에서 호출되어야 합니다.
+// 이 함수들은 PlayerController의 Server RPC에서 호출되어야 함.
 void AFruitPlayerState::SetInstructionReady_Server()
 {
-	// (참고) 이 코드는 서버에서만 실행되어야 합니다.
+	// 이 코드는 서버에서만 실행되어야 함.
 	bIsReady_Instructions = true;
 }
 
 void AFruitPlayerState::SetSecretAnswers_Server(const TArray<EFruitType>& SecretFruits)
 {
-	// (참고) 이 코드는 서버에서만 실행되어야 합니다.
+	// 이 코드는 서버에서만 실행되어야 함.
 	SecretAnswers = SecretFruits;
 	bHasSubmittedFruits = true;
 }
@@ -32,12 +31,11 @@ const TArray<EFruitType>& AFruitPlayerState::GetSecretAnswers_Server() const
 }
 
 
-/** (신규!) 리플리케이션(복제)할 변수 등록 */
+/** 리플리케이션(복제)할 변수 등록 */
 void AFruitPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// (수정!) GameState.cpp에 있던 코드를 이곳으로 이동시킵니다.
 	DOREPLIFETIME(AFruitPlayerState, bIsReady_Instructions);
 	DOREPLIFETIME(AFruitPlayerState, bHasSubmittedFruits);
 	DOREPLIFETIME(AFruitPlayerState, SecretAnswers);

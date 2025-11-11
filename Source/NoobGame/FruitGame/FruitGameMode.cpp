@@ -25,7 +25,7 @@ AFruitGameMode::AFruitGameMode()
 	SpinnerResultIndex = -1;
 }
 
-// ... (PostLogin 부터 PlayerRequestsStartTurn 까지는 기존 코드와 동일) ...
+// 로그인 관리
 void AFruitGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -209,7 +209,7 @@ void AFruitGameMode::ProcessGuessFromWorldObjects(AController* PlayerController)
 	}
 }
 
-// --- [수정됨] ProcessPlayerGuess는 EndGame을 호출하는 유일한 경로입니다 ---
+// --- ProcessPlayerGuess는 EndGame을 호출하는 유일한 경로로 설정 ---
 void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TArray<EFruitType>& GuessedFruits)
 {
 	if (!IsPlayerTurn(PlayerController)) return;
@@ -248,7 +248,6 @@ void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TAr
 		OpponentPC->Client_OpponentGuessed(GuessedFruits, MatchCount);
 	}
 
-	// [핵심]
 	if (MatchCount == 5)
 	{
 		// 과일을 5개 맞췄을 때만 EndGame 호출
@@ -283,12 +282,12 @@ void AFruitGameMode::EndTurn(bool bTimeOut)
 	}
 	else
 	{
-		EndGame(nullptr); // 비기는 경우
+		EndGame(nullptr); // 혹시 몰라 비기는 경우
 	}
 }
 
 
-// --- [대폭 수정] ProcessPunch는 4초 K.O. 타이머만 겁니다 ---
+// --- ProcessPunch ---
 void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter)
 {
 	if (!HitCharacter || !HitCharacter->GetController() || !PuncherController || !PuncherController->GetPawn()) return;
@@ -305,7 +304,7 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 
 	if (HitPlayerState->PunchHitCount >= 10)
 	{
-		// [핵심] K.O. 상태 시작
+		// K.O. 상태 시작
 		HitPlayerState->bIsKnockedDown = true;
 		HitPlayerState->PunchHitCount = 0;
 
@@ -320,7 +319,7 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 			HitPC->Client_SetCameraEffect(true); // 카메라 효과 활성화
 		}
 
-		// [핵심] 4초 뒤 RecoverCharacter를 호출하는 타이머 설정
+		// 4초 뒤 RecoverCharacter를 호출하는 타이머 설정
 		FTimerHandle KnockdownTimer;
 		FTimerDelegate TimerDel = FTimerDelegate::CreateUObject(this, &AFruitGameMode::RecoverCharacter, HitCharacter);
 		GetWorldTimerManager().SetTimer(KnockdownTimer, TimerDel, KnockdownDuration, false);
@@ -330,10 +329,11 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 	}
 	else
 	{
-		// 10대 미만 피격 반응 (기존과 동일)
+		// 10대 미만 피격 반응
 		ANoobGameCharacter* HitChar = Cast<ANoobGameCharacter>(HitCharacter);
 		if (!HitChar) return;
 
+		// 맞는 방향을 계산하여 적절한 몽타주 선택
 		const FVector HitVector = (HitCharacter->GetActorLocation() - PuncherController->GetPawn()->GetActorLocation()).GetSafeNormal();
 		const FVector ActorForward = HitChar->GetActorForwardVector();
 		const FVector ActorRight = HitChar->GetActorRightVector();
@@ -367,7 +367,7 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 	}
 }
 
-// --- [수정됨] EndGame은 5초 타이머를 시작하지 않습니다 ---
+
 void AFruitGameMode::EndGame(APlayerState* Winner)
 {
 	if (!MyGameState || MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver) return;
@@ -379,7 +379,7 @@ void AFruitGameMode::EndGame(APlayerState* Winner)
 	GetWorldTimerManager().ClearTimer(TurnTimerHandle);
 	MyGameState->ServerTimeAtTurnStart = 0.0f;
 
-	// [수정] 진행 중이던 모든 K.O. 타이머를 강제로 클리어합니다.
+	// 진행 중이던 모든 K.O. 타이머를 강제로 클리어
 	for (auto& TimerPair : KnockdownTimers)
 	{
 		GetWorldTimerManager().ClearTimer(TimerPair.Value);
@@ -444,7 +444,7 @@ void AFruitGameMode::EndGame(APlayerState* Winner)
 		LoserPC->Server_SetupEnding(false, DefeatSpawnPoint->GetActorLocation(), DefeatSpawnPoint->GetActorRotation(), MyGameState->WinningCharacterType, EndingCamera);
 	}
 
-	// --- [수정] 5초 타이머 설정 제거 ---
+	// 5초 타이머 설정 제거 ---
 	UE_LOG(LogTemp, Warning, TEXT("[Server GM] EndGame Finished. (No movement lock)"));
 }
 
@@ -463,7 +463,7 @@ void AFruitGameMode::ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimM
 	}
 }
 
-// --- [수정됨] K.O.에서 회복시키는 함수 ---
+// --- K.O.에서 회복시키는 함수 ---
 void AFruitGameMode::RecoverCharacter(ACharacter* CharacterToRecover)
 {
 	if (!CharacterToRecover || !CharacterToRecover->GetController()) return;

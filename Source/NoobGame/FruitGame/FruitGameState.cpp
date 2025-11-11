@@ -1,5 +1,3 @@
-// FruitGameState.cpp
-
 #include "FruitGame/FruitGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/PlayerState.h"
@@ -16,12 +14,10 @@ AFruitGameState::AFruitGameState()
 	WinningCharacterType = ECharacterType::ECT_None;
 }
 
-/** 이 함수는 GameState의 변수를 복제해야 합니다. */
 void AFruitGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	// .h 파일에 선언된 변수들을 복제합니다.
 	DOREPLIFETIME(AFruitGameState, CurrentGamePhase);
 	DOREPLIFETIME(AFruitGameState, CurrentActivePlayer);
 	DOREPLIFETIME(AFruitGameState, ServerTimeAtTurnStart);
@@ -29,13 +25,11 @@ void AFruitGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(AFruitGameState, WinningCharacterType);
 }
 
-/** (수정!) OnRep_GamePhase가 게임 종료 로직을 호출합니다. */
 void AFruitGameState::OnRep_GamePhase()
 {
 	// 게임 단계가 변경되었음을 UI(블루프린트)에 알립니다.
 	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
 
-	// --- (신규!) 게임 종료 연출 시작 ---
 	// 이 함수는 모든 클라이언트에서 실행됩니다.
 	if (CurrentGamePhase == EGamePhase::GP_GameOver)
 	{
@@ -51,7 +45,6 @@ void AFruitGameState::OnRep_GamePhase()
 				bAmIWinner = true;
 			}
 
-			// (중요!) 이 시점에는 WinningCharacterType이 100% 복제되어 있습니다.
 			UE_LOG(LogTemp, Warning, TEXT("OnRep_GamePhase: Calling Event_SetupResultsScreen and Event_ShowResultsScreen. WinnerType: %s"), *UEnum::GetValueAsString(WinningCharacterType));
 
 			// 1. 카메라/입력 설정
@@ -68,7 +61,7 @@ void AFruitGameState::OnRep_GamePhase()
 
 void AFruitGameState::OnRep_CurrentActivePlayer()
 {
-	// (사용자 제공 로그 코드)
+
 	APlayerState* LocalPlayerState = nullptr;
 	if (GetWorld() && GetWorld()->GetFirstPlayerController())
 	{
