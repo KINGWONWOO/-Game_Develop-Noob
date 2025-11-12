@@ -69,7 +69,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	bool ReverseY;
 
-
 protected:
 	/** 래그돌 상태 (서버에서 변경되면 클라이언트로 복제됨) */
 	UPROPERTY(ReplicatedUsing = OnRep_IsRagdolling)

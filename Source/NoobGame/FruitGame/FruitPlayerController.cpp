@@ -1,6 +1,6 @@
-#include "FruitGame/FruitPlayerController.h"
+ï»¿#include "FruitGame/FruitPlayerController.h"
 #include "FruitGame/FruitGameMode.h"
-#include "FruitGame/FruitPlayerState.h" // PlayerState Á¢±ÙÀ» À§ÇØ
+#include "FruitGame/FruitPlayerState.h" // PlayerState ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 #include "FruitGame/FruitGameState.h"
 #include "NoobGame/NoobGameCharacter.h"
 #include "GameFramework/Character.h"
@@ -13,7 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 
-// --- 1. UI ¹× Ä³¸¯ÅÍ¿¡¼­ È£ÃâÇÒ ÇÔ¼öµé (BlueprintCallable) ---
+// --- 1. UI ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ (BlueprintCallable) ---
 
 void AFruitPlayerController::PlayerReady()
 {
@@ -52,7 +52,7 @@ void AFruitPlayerController::RequestPlayPunchMontage()
 }
 
 
-// --- 2. ¼­¹ö -> Å¬¶óÀÌ¾ðÆ® RPC ±¸Çö ---
+// --- 2. ï¿½ï¿½ï¿½ï¿½ -> Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® RPC ï¿½ï¿½ï¿½ï¿½ ---
 
 void AFruitPlayerController::Client_StartTurn_Implementation()
 {
@@ -69,30 +69,33 @@ void AFruitPlayerController::Client_OpponentGuessed_Implementation(const TArray<
 	OnOpponentGuessReceived.Broadcast(Guess, MatchCount);
 }
 
-/** [±âÁ¸] °ÔÀÓ Á¾·á ½Ã UI ¸ðµå·Î ÀüÈ¯ÇÏ´Â RPC ±¸Çö (Ä«¸Þ¶ó ÂüÁ¶ »ç¿ë) */
+// [ìˆ˜ì • + ë¡œê·¸] ëª½íƒ€ì£¼ ìž¬ìƒ ì‹œ, ì¡°ìž‘ì„ 'UIOnly'ë¡œ ë§‰ë„ë¡ ìˆ˜ì •
 void AFruitPlayerController::Client_SetUIOnlyInput_Implementation(bool bIsWinner, ECharacterType WinnerType, ACameraActor* EndingCamera)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Client %s] Client_SetUIOnlyInput CALLED. bYouWon: %s"), *GetName(), bIsWinner ? TEXT("True") : TEXT("False"));
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT %s] Client_SetUIOnlyInput CALLED. bYouWon: %s"), *GetName(), bIsWinner ? TEXT("True") : TEXT("False"));
 
-	// [ÇÙ½É] FInputModeGameAndUI: UI Å¬¸¯ + °ÔÀÓ(ÆÝÄ¡, ÀÌµ¿) ÀÔ·Â ¸ðµÎ ¹ÞÀ½
-	SetInputMode(FInputModeGameAndUI());
+	// --- [ â¬‡ï¸  ì¤‘ìš” ìˆ˜ì •! (Important Fix!) â¬‡ï¸ ] ---
+	// [ìˆ˜ì •] ëª½íƒ€ì£¼ê°€ ìž¬ìƒë˜ëŠ” ë™ì•ˆì—ëŠ” ì¡°ìž‘ì„ ë§‰ê¸° ìœ„í•´ 'UIOnly'ë¡œ ì„¤ì •í•´ì•¼ í•©ë‹ˆë‹¤.
+	SetInputMode(FInputModeUIOnly());
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT %s] Input Mode SET TO: UIOnly (Movement DISABLED)"), *GetName()); // <-- ADDED LOG
+	// --- [ â¬†ï¸  ìˆ˜ì • ì™„ë£Œ (Fix Complete) â¬†ï¸ ] ---
+
 	bShowMouseCursor = true;
 
-	// C++¿¡¼­ Á÷Á¢ Ä«¸Þ¶ó¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+	// C++  Ä«Þ¶ Õ´Ï´.
 	if (EndingCamera)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Client %s] Setting View Target to %s"), *GetName(), *EndingCamera->GetName());
-		SetViewTargetWithBlend(EndingCamera, 0.5f); // 0.5ÃÊ ºí·»µù
+		UE_LOG(LogTemp, Warning, TEXT("[CLIENT %s] Setting View Target to %s"), *GetName(), *EndingCamera->GetName());
+		SetViewTargetWithBlend(EndingCamera, 0.5f); // 0.5 
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[Client %s] EndingCamera reference was NULL!"), *GetName());
+		UE_LOG(LogTemp, Error, TEXT("[CLIENT %s] EndingCamera reference was NULL!"), *GetName());
 	}
 
-	// µ¨¸®°ÔÀÌÆ® ¹× BP ÀÌº¥Æ® È£Ãâ
+	// Æ®  BP ÌºÆ® È£
 	OnGameOver.Broadcast(bIsWinner);
-	// Event_SetupResultsScreen(); // C++·Î Ä«¸Þ¶ó¸¦ ¿Å°åÀ¸¹Ç·Î ÁÖ¼® Ã³¸®
-	Event_ShowResultsScreen(WinnerType, bIsWinner); // UI Ç¥½Ã´Â BP°¡ °è¼Ó ´ã´ç
+	Event_ShowResultsScreen(WinnerType, bIsWinner);
 }
 
 void AFruitPlayerController::Client_PlaySpinnerAnimation_Implementation(int32 WinningPlayerIndex)
@@ -116,14 +119,14 @@ void AFruitPlayerController::Multicast_PlayPunchMontage_Implementation(ACharacte
 	}
 }
 
-/** ·¡±×µ¹ Ä«¸Þ¶ó È¿°ú (ºñ³×ÆÃ) */
+/** ï¿½ï¿½ï¿½×µï¿½ Ä«ï¿½Þ¶ï¿½ È¿ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½) */
 void AFruitPlayerController::Client_SetCameraEffect_Implementation(bool bEnableKnockdownEffect)
 {
 	ApplyKnockdownCameraEffect(bEnableKnockdownEffect);
 }
 
 
-// --- 3. Å¬¶óÀÌ¾ðÆ® -> ¼­¹ö RPC ±¸Çö ---
+// --- 3. Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® -> ï¿½ï¿½ï¿½ï¿½ RPC ï¿½ï¿½ï¿½ï¿½ ---
 
 bool AFruitPlayerController::Server_PlayerReady_Validate() { return true; }
 void AFruitPlayerController::Server_PlayerReady_Implementation()
@@ -171,7 +174,7 @@ void AFruitPlayerController::Server_RequestStartPlayerTurn_Implementation()
 	}
 }
 
-// RequestPunch (ÇÇ°Ý Ã³¸®)
+// RequestPunch (ï¿½Ç°ï¿½ Ã³ï¿½ï¿½)
 bool AFruitPlayerController::Server_RequestPunch_Validate(ACharacter* HitCharacter) { return true; }
 void AFruitPlayerController::Server_RequestPunch_Implementation(ACharacter* HitCharacter)
 {
@@ -182,7 +185,7 @@ void AFruitPlayerController::Server_RequestPunch_Implementation(ACharacter* HitC
 	}
 }
 
-// RequestPlayPunchMontage (¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý)
+// RequestPlayPunchMontage (ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½)
 bool AFruitPlayerController::Server_RequestPlayPunchMontage_Validate() { return true; }
 void AFruitPlayerController::Server_RequestPlayPunchMontage_Implementation()
 {
@@ -201,36 +204,131 @@ void AFruitPlayerController::Server_RequestPlayPunchMontage_Implementation()
 	}
 }
 
-
-bool AFruitPlayerController::Server_SetupEnding_Validate(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera) { return true; }
 void AFruitPlayerController::Server_SetupEnding_Implementation(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera)
 {
-	// [¼­¹ö ½ÇÇà]
-	UE_LOG(LogTemp, Warning, TEXT("[Server PC %s] Executing Server_SetupEnding. bIsWinner: %s"), *GetName(), bIsWinner ? TEXT("True") : TEXT("False"));
-
+	// [ ]
+	UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Executing Server_SetupEnding. bIsWinner: %s"), *GetName(), bIsWinner ? TEXT("True") : TEXT("False"));
 	ANoobGameCharacter* MyPawn = Cast<ANoobGameCharacter>(GetPawn());
 	if (!MyPawn)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[Server PC %s] ... FAILED to GetPawn()!"), *GetName());
+		UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] ... FAILED to GetPawn()!"), *GetName());
 		return;
 	}
-
-	// [¾ÈÀü ÀåÄ¡] (K.O. ·¡±×µ¹ °­Á¦ ÇØÁ¦)
+	// [ Ä¡] (K.O. ×µ  )
 	MyPawn->SetRagdollState_Server(false);
-
 	UCharacterMovementComponent* MovementComp = MyPawn->GetCharacterMovement();
 	if (MovementComp)
 	{
-		// [ÇÙ½É] ÀÌµ¿ ¸ðµå¸¦ 'Walking'À¸·Î °­Á¦ ¼³Á¤ (Àý´ë Àá±×Áö ¾ÊÀ½)
 		MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
-		// (¾ÈÀü ÀåÄ¡) ÇöÀç ¼Óµµ¸¦ 0À¸·Î ¸¸µì´Ï´Ù.
 		MovementComp->StopMovementImmediately();
 	}
-
-	// ÅÚ·¹Æ÷Æ®ÇÕ´Ï´Ù.
+	// Ú·Æ®Õ´Ï´.
 	bool bTeleportSuccess = MyPawn->TeleportTo(TargetLocation, TargetRotation, false, true);
-	UE_LOG(LogTemp, Warning, TEXT("[Server PC %s] Teleport attempt result: %s"), *GetName(), bTeleportSuccess ? TEXT("Success") : TEXT("Failed"));
+	UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Teleport attempt result: %s"), *GetName(), bTeleportSuccess ? TEXT("Success") : TEXT("Failed"));
 
-	// Å¬¶óÀÌ¾ðÆ®¿¡°Ô Ä«¸Þ¶ó ÂüÁ¶¸¦ Æ÷ÇÔÇÏ¿© RPC È£Ãâ
+	// Å¬Ì¾Æ® Ä«Þ¶  Ï¿ RPC È£
 	Client_SetUIOnlyInput(bIsWinner, WinnerType, EndingCamera);
+	UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Called Client_SetUIOnlyInput."), *GetName()); // <-- ADDED LOG
+
+	ANoobGameCharacter* MyCharacter = Cast<ANoobGameCharacter>(GetPawn());
+	AFruitPlayerState* MyPlayerState = GetPlayerState<AFruitPlayerState>();
+	AFruitGameMode* GM = GetWorld()->GetAuthGameMode<AFruitGameMode>();
+	if (MyCharacter && MyPlayerState && GM)
+	{
+		UAnimMontage* MontageToPlay = bIsWinner ? MyCharacter->VictoryMontage : MyCharacter->DefeatMontage;
+
+		// --- [ ] ---
+		if (MontageToPlay)
+		{
+			UAnimInstance* AnimInstance = MyCharacter->GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] AnimInstance valid. Binding OnMontageEnded..."), *GetName()); // <-- ADDED LOG
+				// ëª½íƒ€ì£¼ê°€ ëë‚¬ì„ ë•Œ OnEndingMontageEnded í•¨ìˆ˜ê°€ í˜¸ì¶œë˜ë„ë¡ ë¸ë¦¬ê²Œì´íŠ¸ì— ë°”ì¸ë”©í•©ë‹ˆë‹¤.
+				AnimInstance->OnMontageEnded.AddUniqueDynamic(this, &AFruitPlayerController::OnEndingMontageEnded);
+
+				// ê²Œìž„ ëª¨ë“œë¥¼ í†µí•´ ëª½íƒ€ì£¼ ìž¬ìƒì„ ìš”ì²­í•©ë‹ˆë‹¤.
+				GM->ProcessPunchAnimation(MyCharacter, MontageToPlay);
+				UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Called ProcessPunchAnimation with %s."), *GetName(), *MontageToPlay->GetName()); // <-- ADDED LOG
+			}
+			else
+			{
+				// [ë¡œê·¸ ìˆ˜ì •]
+				UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] ... FAILED to GetAnimInstance()! Enabling movement immediately."), *GetName());
+				Client_EnableMovementAfterEnding();
+			}
+		}
+		else
+		{
+			// [ë¡œê·¸ ìˆ˜ì •]
+			UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] MontageToPlay (Victory/Defeat) is NULL! Enabling movement immediately."), *GetName());
+			Client_EnableMovementAfterEnding();
+		}
+	}
+}
+
+// [ë¡œê·¸ ì¶”ê°€] ì¡°ìž‘ í™œì„±í™” í•¨ìˆ˜ í˜¸ì¶œ í™•ì¸
+void AFruitPlayerController::Client_EnableMovementAfterEnding_Implementation()
+{
+	// --- [ â¬‡ï¸  ë¡œê·¸ ì¶”ê°€ (Logs Added) â¬‡ï¸ ] ---
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT %s] Client_EnableMovementAfterEnding FIRED."), *GetName());
+
+	// 1. ìž…ë ¥ ëª¨ë“œë¥¼ FInputModeGameAndUIë¡œ ì„¤ì •í•˜ê³ , ë§ˆìš°ìŠ¤ ì»¤ì„œë¥¼ ì¼­ë‹ˆë‹¤.
+	SetInputMode(FInputModeGameAndUI());
+	bShowMouseCursor = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("[CLIENT %s] Input Mode SET TO: GameAndUI (Movement ENABLED)"), *GetName()); // <-- ADDED LOG
+}
+
+bool AFruitPlayerController::Server_SetupEnding_Validate(bool bIsWinner, FVector TargetLocation, FRotator TargetRotation, ECharacterType WinnerType, ACameraActor* EndingCamera)
+{
+	// íŠ¹ë³„í•œ ê²€ì¦ ë¡œì§ì´ ì—†ë‹¤ë©´ trueë¥¼ ë°˜í™˜í•˜ì—¬ í•­ìƒ RPCë¥¼ ì‹¤í–‰í•˜ë„ë¡ í•©ë‹ˆë‹¤.
+	return true;
+}
+
+// [ë¡œê·¸ ì¶”ê°€] ëª½íƒ€ì£¼ ì¢…ë£Œ ë¸ë¦¬ê²Œì´íŠ¸ í˜¸ì¶œ í™•ì¸
+void AFruitPlayerController::OnEndingMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// --- [ â¬‡ï¸  ë¡œê·¸ ì¶”ê°€ (Logs Added) â¬‡ï¸ ] ---
+	UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] OnEndingMontageEnded FIRED. bInterrupted: %s"), *GetName(), bInterrupted ? TEXT("True") : TEXT("False"));
+
+	// ëª½íƒ€ì£¼ê°€ ì¤‘ë‹¨ë˜ì§€ ì•Šê³  ì •ìƒì ìœ¼ë¡œ ëë‚¬ëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+	if (!bInterrupted)
+	{
+		ANoobGameCharacter* MyCharacter = Cast<ANoobGameCharacter>(GetPawn());
+		if (MyCharacter)
+		{
+			// ëë‚œ ëª½íƒ€ì£¼ê°€ ìš°ë¦¬ê°€ ê¸°ë‹¤ë¦¬ë˜ ìŠ¹ë¦¬ ë˜ëŠ” íŒ¨ë°° ëª½íƒ€ì£¼ì¸ì§€ í™•ì¸í•©ë‹ˆë‹¤.
+			bool bIsVictoryMontage = (Montage == MyCharacter->VictoryMontage);
+			bool bIsDefeatMontage = (Montage == MyCharacter->DefeatMontage);
+			UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Checking Montage... IsVictory: %s, IsDefeat: %s"), *GetName(), bIsVictoryMontage ? TEXT("True") : TEXT("False"), bIsDefeatMontage ? TEXT("True") : TEXT("False"));
+
+			if (bIsVictoryMontage || bIsDefeatMontage)
+			{
+				// ë¸ë¦¬ê²Œì´íŠ¸ê°€ ì¤‘ë³µ í˜¸ì¶œë˜ì§€ ì•Šë„ë¡ ë°”ì¸ë”©ì„ í•´ì œí•©ë‹ˆë‹¤.
+				UAnimInstance* AnimInstance = MyCharacter->GetMesh()->GetAnimInstance();
+				if (AnimInstance)
+				{
+					AnimInstance->OnMontageEnded.RemoveDynamic(this, &AFruitPlayerController::OnEndingMontageEnded);
+					UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Delegate Removed."), *GetName()); // <-- ADDED LOG
+				}
+
+				// í•´ë‹¹ í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ì´ë™ì„ ë‹¤ì‹œ í™œì„±í™”í•˜ë¼ê³  ëª…ë ¹í•©ë‹ˆë‹¤.
+				Client_EnableMovementAfterEnding();
+				UE_LOG(LogTemp, Warning, TEXT("[SERVER PC %s] Calling Client_EnableMovementAfterEnding..."), *GetName()); // <-- ADDED LOG
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] Montage DID NOT MATCH! Movement will NOT be re-enabled."), *GetName()); // <-- ADDED LOG
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] GetPawn() failed inside OnEndingMontageEnded!"), *GetName()); // <-- ADDED LOG
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SERVER PC %s] Montage was interrupted! Movement will NOT be re-enabled."), *GetName()); // <-- ADDED LOG
+	}
 }

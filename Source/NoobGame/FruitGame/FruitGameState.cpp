@@ -35,6 +35,7 @@ void AFruitGameState::OnRep_GamePhase()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnRep_GamePhase: Detected GP_GameOver on Client."));
 
+
 		// 로컬 플레이어 컨트롤러를 가져옵니다. (멀티플레이어에서는 0번 인덱스가 로컬 플레이어)
 		AFruitPlayerController* PC = Cast<AFruitPlayerController>(UGameplayStatics::GetPlayerController(this, 0));
 		if (PC)
