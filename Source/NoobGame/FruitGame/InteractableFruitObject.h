@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "FruitGame/FruitGameTypes.h"
+#include "GameTypes.h"
 #include "InteractableFruitObject.generated.h"
 
 UCLASS()

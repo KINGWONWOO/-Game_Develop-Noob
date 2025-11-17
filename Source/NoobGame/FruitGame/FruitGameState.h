@@ -2,12 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "FruitGame/FruitGameTypes.h"
+#include "GameTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "FruitGameState.generated.h"
 
-// UI 바인딩을 위한 델리게이트 선언
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EGamePhase, NewPhase);
+// ──────────────────────────────────────────────────────────────────────────
+// Delegate Declarations
+// ──────────────────────────────────────────────────────────────────────────
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EFruitGamePhase, NewPhase);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFirstTurnPlayerDetermined, int32, StartingPlayerState);
 
 UCLASS()
@@ -16,13 +18,19 @@ class NOOBGAME_API AFruitGameState : public AGameStateBase
 	GENERATED_BODY()
 
 public:
+	// ──────────────────────────────────────────────────────────────────────────
+	// Constructor & Framework Overrides
+	// ──────────────────────────────────────────────────────────────────────────
 	AFruitGameState();
 
 	// 리플리케이트할 변수들을 등록
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	// ──────────────────────────────────────────────────────────────────────────
+	// Replicated Properties (Networked State)
+	// ──────────────────────────────────────────────────────────────────────────
 	UPROPERTY(ReplicatedUsing = OnRep_GamePhase, BlueprintReadOnly, Category = "Game State")
-	EGamePhase CurrentGamePhase;
+	EFruitGamePhase CurrentGamePhase;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentActivePlayer, BlueprintReadOnly, Category = "Game State")
 	APlayerState* CurrentActivePlayer;
@@ -36,6 +44,9 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
 	ECharacterType WinningCharacterType;
 
+	// ──────────────────────────────────────────────────────────────────────────
+	// Delegates (UI Binding)
+	// ──────────────────────────────────────────────────────────────────────────
 	UPROPERTY(BlueprintAssignable, Category = "Game State")
 	FOnGamePhaseChanged OnGamePhaseChanged;
 
@@ -43,6 +54,10 @@ public:
 	FOnFirstTurnPlayerDetermined OnFirstTurnPlayerDetermined;
 
 protected:
+	// ──────────────────────────────────────────────────────────────────────────
+	// Replication Notifies (OnRep Functions)
+	// ──────────────────────────────────────────────────────────────────────────
+
 	// CurrentGamePhase가 클라이언트에서 복제될 때 호출
 	UFUNCTION()
 	void OnRep_GamePhase();
@@ -50,5 +65,4 @@ protected:
 	// CurrentActivePlayer가 클라이언트에서 복제될 때 호출
 	UFUNCTION()
 	void OnRep_CurrentActivePlayer();
-
 };

@@ -44,7 +44,7 @@ void AFruitGameMode::PostLogin(APlayerController* NewPlayer)
 	if (MyGameState && GetNumPlayers() == 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Server] PostLogin: 2 players detected. Changing phase to GP_Instructions."));
-		MyGameState->CurrentGamePhase = EGamePhase::GP_Instructions;
+		MyGameState->CurrentGamePhase = EFruitGamePhase::GP_Instructions;
 	}
 }
 
@@ -67,9 +67,9 @@ void AFruitGameMode::StartTurn()
 	}
 }
 
-void AFruitGameMode::PlayerInteracted(AController* PlayerController, AActor* HitActor, EGamePhase CurrentPhase)
+void AFruitGameMode::PlayerInteracted(AController* PlayerController, AActor* HitActor, EFruitGamePhase CurrentPhase)
 {
-	if (CurrentPhase == EGamePhase::GP_PlayerTurn)
+	if (CurrentPhase == EFruitGamePhase::GP_PlayerTurn)
 	{
 		if (!IsPlayerTurn(PlayerController)) return;
 		if (AInteractableFruitObject* GuessObject = Cast<AInteractableFruitObject>(HitActor))
@@ -86,7 +86,7 @@ void AFruitGameMode::PlayerInteracted(AController* PlayerController, AActor* Hit
 // --- 1. Instructions 단계 ---
 void AFruitGameMode::PlayerIsReady(AController* PlayerController)
 {
-	if (!MyGameState || MyGameState->CurrentGamePhase != EGamePhase::GP_Instructions) return;
+	if (!MyGameState || MyGameState->CurrentGamePhase != EFruitGamePhase::GP_Instructions) return;
 	AFruitPlayerState* PS = PlayerController->GetPlayerState<AFruitPlayerState>();
 	if (PS)
 	{
@@ -111,14 +111,14 @@ void AFruitGameMode::CheckBothPlayersReady_Instructions()
 	if (ReadyPlayers == 2)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Server] ... 2명 모두 준비됨. 페이즈를 GP_Setup로 변경합니다."));
-		MyGameState->CurrentGamePhase = EGamePhase::GP_Setup;
+		MyGameState->CurrentGamePhase = EFruitGamePhase::GP_Setup;
 	}
 }
 
 // --- 2. Setup 단계 ---
 void AFruitGameMode::PlayerSubmittedFruits(AController* PlayerController, const TArray<EFruitType>& SecretFruits)
 {
-	if (!MyGameState || MyGameState->CurrentGamePhase != EGamePhase::GP_Setup) return;
+	if (!MyGameState || MyGameState->CurrentGamePhase != EFruitGamePhase::GP_Setup) return;
 	AFruitPlayerState* PS = PlayerController->GetPlayerState<AFruitPlayerState>();
 	if (PS && !PS->bHasSubmittedFruits)
 	{
@@ -142,7 +142,7 @@ void AFruitGameMode::CheckBothPlayersReady_Setup()
 void AFruitGameMode::StartSpinnerPhase()
 {
 	if (!MyGameState) return;
-	MyGameState->CurrentGamePhase = EGamePhase::GP_SpinnerTurn;
+	MyGameState->CurrentGamePhase = EFruitGamePhase::GP_SpinnerTurn;
 	SpinnerResultIndex = FMath::RandRange(0, 1);
 	for (APlayerState* PS : MyGameState->PlayerArray)
 	{
@@ -156,11 +156,11 @@ void AFruitGameMode::StartSpinnerPhase()
 
 void AFruitGameMode::PlayerRequestsStartTurn(AController* PlayerController)
 {
-	if (!MyGameState || MyGameState->CurrentGamePhase != EGamePhase::GP_SpinnerTurn || SpinnerResultIndex == -1) return;
-	if (MyGameState->CurrentGamePhase == EGamePhase::GP_PlayerTurn) return;
+	if (!MyGameState || MyGameState->CurrentGamePhase != EFruitGamePhase::GP_SpinnerTurn || SpinnerResultIndex == -1) return;
+	if (MyGameState->CurrentGamePhase == EFruitGamePhase::GP_PlayerTurn) return;
 
 	MyGameState->CurrentActivePlayer = MyGameState->PlayerArray[SpinnerResultIndex];
-	MyGameState->CurrentGamePhase = EGamePhase::GP_PlayerTurn;
+	MyGameState->CurrentGamePhase = EFruitGamePhase::GP_PlayerTurn;
 	StartTurn();
 }
 
@@ -330,7 +330,7 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 	AFruitPlayerState* HitPlayerState = HitCharacter->GetController()->GetPlayerState<AFruitPlayerState>();
 
 	// 이미 K.O. 상태이거나 게임이 끝났으면 무시
-	if (!MyGameState || !HitPlayerState || HitPlayerState->bIsKnockedDown || MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver) return;
+	if (!MyGameState || !HitPlayerState || HitPlayerState->bIsKnockedDown || MyGameState->CurrentGamePhase == EFruitGamePhase::GP_GameOver) return;
 
 	const FVector PunchDirection = (HitCharacter->GetActorLocation() - PuncherController->GetPawn()->GetActorLocation()).GetSafeNormal();
 	HitCharacter->GetCharacterMovement()->AddImpulse(PunchDirection * PunchPushForce, true);
@@ -405,11 +405,11 @@ void AFruitGameMode::ProcessPunch(APlayerController* PuncherController, ACharact
 
 void AFruitGameMode::EndGame(APlayerState* Winner)
 {
-	if (!MyGameState || MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver) return;
+	if (!MyGameState || MyGameState->CurrentGamePhase == EFruitGamePhase::GP_GameOver) return;
 
 	UE_LOG(LogTemp, Warning, TEXT("[Server GM] EndGame Started. Winner: %s"), Winner ? *Winner->GetPlayerName() : TEXT("None"));
 
-	MyGameState->CurrentGamePhase = EGamePhase::GP_GameOver;
+	MyGameState->CurrentGamePhase = EFruitGamePhase::GP_GameOver;
 	MyGameState->Winner = Winner;
 
 	// [수정] 모든 딜레이 타이머를 확실히 클리어합니다.
@@ -512,7 +512,7 @@ void AFruitGameMode::RecoverCharacter(ACharacter* CharacterToRecover)
 	KnockdownTimers.Remove(CharacterToRecover);
 
 	// 게임이 그 사이에 끝났다면 아무것도 하지 않음 (EndGame이 이미 래그돌을 풀었을 것임)
-	if (MyGameState && MyGameState->CurrentGamePhase == EGamePhase::GP_GameOver)
+	if (MyGameState && MyGameState->CurrentGamePhase == EFruitGamePhase::GP_GameOver)
 	{
 		return;
 	}

@@ -3,45 +3,91 @@
 #include "OXQuizGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/PlayerState.h"
+#include "QuizGame/OXQuizPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 
 AOXQuizGameState::AOXQuizGameState()
 {
-    CurrentPhase = EQuizGamePhase::WaitingToStart;
+    CurrentGamePhase = EQuizGamePhase::GP_WaitingToStart;
     Winner = nullptr;
-    Loser = nullptr;
+	WinningCharacterType = ECharacterType::ECT_None;
+    CurrentSpeedLevel = 0;
+    PlayingCountdown = -1;
 }
 
 void AOXQuizGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    DOREPLIFETIME(AOXQuizGameState, CurrentPhase);
+    DOREPLIFETIME(AOXQuizGameState, CurrentGamePhase);
     DOREPLIFETIME(AOXQuizGameState, Winner);
-    DOREPLIFETIME(AOXQuizGameState, Loser);
+    DOREPLIFETIME(AOXQuizGameState, WinningCharacterType);
+    DOREPLIFETIME(AOXQuizGameState, CurrentSpeedLevel);
+    DOREPLIFETIME(AOXQuizGameState, PlayingCountdown);
 }
 
-void AOXQuizGameState::SetCurrentPhase(EQuizGamePhase NewPhase)
+void AOXQuizGameState::OnRep_GamePhase()
 {
-    // 서버에서만 호출되어야 합니다.
+	// 게임 단계가 변경되었음을 UI(블루프린트)에 알립니다.
+	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
+
+	// 이 함수는 모든 클라이언트에서 실행됩니다.
+	if (CurrentGamePhase == EQuizGamePhase::GP_GameOver)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnRep_GamePhase: Detected GP_GameOver on Client."));
+
+
+		// 로컬 플레이어 컨트롤러를 가져옵니다. (멀티플레이어에서는 0번 인덱스가 로컬 플레이어)
+		AOXQuizPlayerController* PC = Cast<AOXQuizPlayerController>(UGameplayStatics::GetPlayerController(this, 0));
+		if (PC)
+		{
+			bool bAmIWinner = false;
+			if (Winner && PC->PlayerState == Winner)
+			{
+				bAmIWinner = true;
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("OnRep_GamePhase: Calling Event_SetupResultsScreen and Event_ShowResultsScreen. WinnerType: %s"), *UEnum::GetValueAsString(WinningCharacterType));
+
+			// 1. 카메라/입력 설정
+			PC->Event_SetupResultsScreen();
+			// 2. UI 및 애니메이션 설정
+			PC->Event_ShowResultsScreen(WinningCharacterType, bAmIWinner);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("OnRep_GamePhase: FAILED to cast to AFruitPlayerController!"));
+		}
+	}
+}
+
+// --- Speed ---
+void AOXQuizGameState::SetCurrentSpeedLevel(int32 NewLevel)
+{
     if (GetLocalRole() == ROLE_Authority)
     {
-        CurrentPhase = NewPhase;
-        OnRep_CurrentPhase(); // 서버 자신도 호출
+        if (CurrentSpeedLevel != NewLevel)
+        {
+            CurrentSpeedLevel = NewLevel;
+            OnRep_CurrentSpeedLevel();
+        }
     }
 }
-
-void AOXQuizGameState::OnRep_CurrentPhase()
+void AOXQuizGameState::OnRep_CurrentSpeedLevel()
 {
-    // 클라이언트 UI 갱신 등
-    // 예: FString PhaseString = UEnum::GetValueAsString(CurrentPhase);
-    // UE_LOG(LogTemp, Log, TEXT("Client: GamePhase changed to %s"), *PhaseString);
+    OnSpeedLevelChanged.Broadcast(CurrentSpeedLevel);
 }
 
-void AOXQuizGameState::Server_SetWinnerAndLoser_Implementation(APlayerState* NewWinner, APlayerState* NewLoser)
+// --- Playing Countdown ---
+void AOXQuizGameState::SetPlayingCountdown(int32 TimeLeft)
 {
     if (GetLocalRole() == ROLE_Authority)
     {
-        Winner = NewWinner;
-        Loser = NewLoser;
+        PlayingCountdown = TimeLeft;
+        OnRep_PlayingCountdown();
     }
+}
+void AOXQuizGameState::OnRep_PlayingCountdown()
+{
+    OnPlayingCountdownChanged.Broadcast(PlayingCountdown);
 }

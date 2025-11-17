@@ -7,7 +7,7 @@
 AFruitGameState::AFruitGameState()
 {
 	// 기본값 초기화
-	CurrentGamePhase = EGamePhase::GP_WaitingToStart;
+	CurrentGamePhase = EFruitGamePhase::GP_WaitingToStart;
 	CurrentActivePlayer = nullptr;
 	ServerTimeAtTurnStart = 0.0f;
 	Winner = nullptr;
@@ -31,7 +31,7 @@ void AFruitGameState::OnRep_GamePhase()
 	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
 
 	// 이 함수는 모든 클라이언트에서 실행됩니다.
-	if (CurrentGamePhase == EGamePhase::GP_GameOver)
+	if (CurrentGamePhase == EFruitGamePhase::GP_GameOver)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnRep_GamePhase: Detected GP_GameOver on Client."));
 
@@ -73,7 +73,7 @@ void AFruitGameState::OnRep_CurrentActivePlayer()
 		}
 	}
 
-	if (CurrentGamePhase == EGamePhase::GP_PlayerTurn && CurrentActivePlayer)
+	if (CurrentGamePhase == EFruitGamePhase::GP_PlayerTurn && CurrentActivePlayer)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("   CurrentActivePlayer: %s (Addr: %p)"), *CurrentActivePlayer->GetPlayerName(), (void*)CurrentActivePlayer);
 

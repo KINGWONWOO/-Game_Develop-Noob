@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "FruitGame/FruitGameTypes.h"
+#include "GameTypes.h"
 #include "GameFramework/Pawn.h"
 #include "FruitGameMode.generated.h"
 
@@ -21,26 +21,39 @@ class NOOBGAME_API AFruitGameMode : public AGameModeBase
 public:
 	AFruitGameMode();
 
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Public Game Flow API
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 	void PlayerIsReady(AController* PlayerController);
 	void PlayerSubmittedFruits(AController* PlayerController, const TArray<EFruitType>& SecretFruits);
-	void ProcessPlayerGuess(AController* PlayerController, const TArray<EFruitType>& GuessedFruits);
 	void PlayerRequestsStartTurn(AController* PlayerController);
+
 	bool IsPlayerTurn(AController* PlayerController) const;
-	void PlayerInteracted(AController* PlayerController, AActor* HitActor, EGamePhase CurrentPhase);
 
-	UFUNCTION(BlueprintCallable, Category = "Game")
-	void ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimMontage* MontageToPlay);
-
-	UFUNCTION(BlueprintCallable, Category = "Game")
-	void ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter);
+	void PlayerInteracted(AController* PlayerController, AActor* HitActor, EFruitGamePhase CurrentPhase);
+	void ProcessPlayerGuess(AController* PlayerController, const TArray<EFruitType>& GuessedFruits);
 
 	UFUNCTION(BlueprintCallable, Category = "Game")
 	void EndGame(APlayerState* Winner);
 
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Public Combat API
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void ProcessPunch(APlayerController* PuncherController, ACharacter* HitCharacter);
+
+	UFUNCTION(BlueprintCallable, Category = "Game")
+	void ProcessPunchAnimation(ACharacter* PunchingCharacter, UAnimMontage* MontageToPlay);
+
 protected:
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Framework Overrides
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
-	// °ÔÀÓ Èå¸§
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Internal Game Flow Logic
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 	void CheckBothPlayersReady_Instructions();
 	void CheckBothPlayersReady_Setup();
 	void StartSpinnerPhase();
@@ -49,12 +62,20 @@ protected:
 	void OnTurnTimerExpired();
 	void ProcessGuessFromWorldObjects(AController* PlayerController);
 
-	/** [±âÁ¸] ÃßÃø °á°ú°¡ µô·¹ÀÌ ½Ã°£¸¸Å­ Ç¥½ÃµÈ ÈÄ ÅÏÀ» ³Ñ±â±â À§ÇØ È£ÃâµË´Ï´Ù. */
+	/** ÃßÃø °á°ú°¡ µô·¹ÀÌ ½Ã°£¸¸Å­ Ç¥½ÃµÈ ÈÄ ÅÏÀ» ³Ñ±â±â À§ÇØ È£ÃâµË´Ï´Ù. */
 	void OnGuessResultDelayExpired();
 
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Internal Combat Logic
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
 	UFUNCTION()
 	void RecoverCharacter(ACharacter* CharacterToRecover);
 
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Configuration Properties (Settings)
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+
+	// -- Classes --
 	/** È£½ºÆ®/Client 1ÀÌ »ç¿ëÇÒ Æù Å¬·¡½º (BP_FirstPersonCharacter_Cat) */
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerPawn")
 	TSubclassOf<APawn> HostPawnClass;
@@ -63,35 +84,47 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerPawn")
 	TSubclassOf<APawn> ClientPawnClass;
 
-	UPROPERTY()
-	AFruitGameState* MyGameState;
-
-	FTimerHandle TurnTimerHandle;
-
-	/** [±âÁ¸] (¿À´ä ½Ã) ÅÏ ³Ñ±è µô·¹ÀÌ Å¸ÀÌ¸Ó ÇÚµé */
-	FTimerHandle GuessResultTimerHandle;
-
-	/** [½Å±Ô] (Á¤´ä ½Ã) °ÔÀÓ Á¾·á µô·¹ÀÌ Å¸ÀÌ¸Ó ÇÚµé */
-	FTimerHandle EndGameDelayTimerHandle;
-
-	/** [±âÁ¸] K.O. »óÅÂÀÎ ÇÃ·¹ÀÌ¾î¿Í º¹±¸ Å¸ÀÌ¸Ó¸¦ ¸ÅÇÎÇÕ´Ï´Ù. */
-	TMap<TWeakObjectPtr<ACharacter>, FTimerHandle> KnockdownTimers;
-
+	// -- Game Rules --
 	UPROPERTY(EditDefaultsOnly, Category = "Game Rules")
 	float TurnDuration = 30.0f;
 
-	/** [±âÁ¸] ÃßÃø °á°ú UI¸¦ Ç¥½ÃÇÒ ½Ã°£ (µô·¹ÀÌ) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game Rules")
 	float GuessResultDisplayTime = 3.0f;
 
-	int32 NumPlayersReady_Setup = 0;
-
-	UPROPERTY()
-	int32 SpinnerResultIndex = -1;
-
+	// -- Combat Settings --
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float PunchPushForce = 50000.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float KnockdownDuration = 4.0f; // 4ÃÊ K.O. Áö¼Ó½Ã°£
+
+	// -- GameOver Settings --
+	UPROPERTY(EditDefaultsOnly, Category = "Quiz|GameOver")
+	FName WinnerSpawnTag = TEXT("Result_Spawn_Winner");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Quiz|GameOver")
+	FName LoserSpawnTag = TEXT("Result_Spawn_Defeat");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Quiz|GameOver")
+	FName EndingCameraTag = TEXT("EndingCamera");
+
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	// Runtime State & References
+	// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+	UPROPERTY()
+	AFruitGameState* MyGameState;
+
+	// -- Timers --
+	FTimerHandle TurnTimerHandle;
+
+	FTimerHandle GuessResultTimerHandle;
+
+	FTimerHandle EndGameDelayTimerHandle;
+
+	TMap<TWeakObjectPtr<ACharacter>, FTimerHandle> KnockdownTimers;
+
+	int32 NumPlayersReady_Setup = 0;
+
+	UPROPERTY()
+	int32 SpinnerResultIndex = -1;
 };

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "OXQuizTypes.h" // FQuizData 구조체를 알기 위해 포함
+#include "GameTypes.h"// FQuizData 구조체를 알기 위해 포함
 #include "QuizObstacleBase.generated.h"
 
 // .h 파일에서는 전방 선언을 사용합니다.

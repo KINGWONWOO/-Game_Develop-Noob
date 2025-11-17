@@ -1,50 +1,82 @@
-// OXQuizGameState.h
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "OXQuizTypes.h" // EQuizGamePhase蒂 憲晦 嬪п んл
+#include "GameTypes.h"
 #include "OXQuizGameState.generated.h"
 
 class APlayerState;
 
+// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+// Delegate Declarations
+// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeedLevelChanged, int32, NewSpeedLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayingCountdownChanged, int32, TimeLeft);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnOXGamePhaseChanged, EQuizGamePhase, NewPhase);
+
 UCLASS()
 class NOOBGAME_API AOXQuizGameState : public AGameStateBase
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    AOXQuizGameState();
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Constructor & Framework Overrides
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	AOXQuizGameState();
 
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    /** [憮幗] ⑷營 啪歜 む檜鍔蒂 撲薑м棲棻. */
-    void SetCurrentPhase(EQuizGamePhase NewPhase);
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Replicated Properties (Public Game State)
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	UPROPERTY(ReplicatedUsing = OnRep_GamePhase, BlueprintReadOnly, Category = "Game State")
+	EQuizGamePhase CurrentGamePhase;
 
-    UFUNCTION(BlueprintCallable, Category = "Game")
-    EQuizGamePhase GetCurrentPhase() const { return CurrentPhase; }
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
+	APlayerState* Winner;
 
-    /** [憮幗] 蝓濠諦 ぬ濠蒂 撲薑м棲棻. */
-    UFUNCTION(Server, Reliable)
-    void Server_SetWinnerAndLoser(APlayerState* NewWinner, APlayerState* NewLoser);
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game State")
+	ECharacterType WinningCharacterType;
 
-    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Game")
-    TObjectPtr<APlayerState> Winner;
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Public Setters (Server Only API)
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	void SetCurrentSpeedLevel(int32 NewLevel);
 
-    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Replicated, Category = "Game")
-    TObjectPtr<APlayerState> Loser;
+	void SetPlayingCountdown(int32 TimeLeft);
+
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Delegates (UI Binding)
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	UPROPERTY(BlueprintAssignable, Category = "Game|State")
+	FOnOXGamePhaseChanged OnGamePhaseChanged;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Game|Speed")
+	FOnSpeedLevelChanged OnSpeedLevelChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Game|Countdown")
+	FOnPlayingCountdownChanged OnPlayingCountdownChanged;
 
 protected:
-    /**
-     * @brief ⑷營 啪歜 む檜鍔 (賅萇 贗塭檜樹お縑 犒薯脾)
-     */
-    UPROPERTY(ReplicatedUsing = OnRep_CurrentPhase)
-    EQuizGamePhase CurrentPhase;
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Internal Replicated Properties
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentSpeedLevel)
+	int32 CurrentSpeedLevel;
 
-    /**
-     * @brief 贗塭檜樹お縑憮 む檜鍔 滲唳 衛 ��轎腎朝 RepNotify
-     */
-    UFUNCTION()
-    void OnRep_CurrentPhase();
+	UPROPERTY(ReplicatedUsing = OnRep_PlayingCountdown)
+	int32 PlayingCountdown;
+
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	// Replication Notifies (OnRep Functions)
+	// 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式
+	UFUNCTION()
+	void OnRep_GamePhase();
+
+	UFUNCTION()
+	void OnRep_CurrentSpeedLevel();
+
+	UFUNCTION()
+	void OnRep_PlayingCountdown();
 };
