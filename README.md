@@ -25,21 +25,24 @@
 
 ## 📸 2. 플레이 사진 (Screenshots)
 
+## 📸 2. 플레이 사진 (Screenshots)
+
 | 메인 메뉴 (Main Menu) | 옵션 (Option) |
 | :---: | :---: |
-| <img src="Doc/Images/MainMenu.png" width="400"> | <img src="Doc/Images/Option.png" width="400"> |
+| <img src="Doc/Images/MainMenu.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> | <img src="Doc/Images/Option.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> |
 
 <br>
 
 | 로비 (Lobby) | 과일 게임 (Fruit Game) |
 | :---: | :---: |
-| <img src="Doc/Images/Lobby.png" width="400"> | <img src="Doc/Images/FruitGame.png" width="400"> |
+| <img src="Doc/Images/Lobby.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> | <img src="Doc/Images/FruitGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> |
 
 <br>
 
 | 미로 게임 (Maze Game) | 퀴즈 게임 (Quiz Game) |
 | :---: | :---: |
-| <img src="Doc/Images/MazeGame.png" width="400"> | <img src="Doc/Images/QuizGame.png" width="400"> |
+| <img src="Doc/Images/MazeGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> | <img src="Doc/Images/QuizGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;"> |
+
 ---
 
 ## 🎥 3. 플레이 영상 (Gameplay Video)
