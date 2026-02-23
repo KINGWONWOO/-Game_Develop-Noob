@@ -27,20 +27,19 @@
 
 | 메인 메뉴 (Main Menu) | 옵션 (Option) |
 | :---: | :---: |
-| ![MainMenu](Doc/Images/MainMenu.png) | ![Option](Doc/Images/Option.png) |
+| <img src="Doc/Images/MainMenu.png" width="400"> | <img src="Doc/Images/Option.png" width="400"> |
 
 <br>
 
 | 로비 (Lobby) | 과일 게임 (Fruit Game) |
 | :---: | :---: |
-| ![Lobby](Doc/Images/Lobby.png) | ![FruitGame](Doc/Images/FruitGame.png) |
+| <img src="Doc/Images/Lobby.png" width="400"> | <img src="Doc/Images/FruitGame.png" width="400"> |
 
 <br>
 
 | 미로 게임 (Maze Game) | 퀴즈 게임 (Quiz Game) |
 | :---: | :---: |
-| ![MazeGame](Doc/Images/MazeGame.png) | ![QuizGame](Doc/Images/QuizGame.png) |
-
+| <img src="Doc/Images/MazeGame.png" width="400"> | <img src="Doc/Images/QuizGame.png" width="400"> |
 ---
 
 ## 🎥 3. 플레이 영상 (Gameplay Video)
