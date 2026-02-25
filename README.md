@@ -25,9 +25,9 @@
 
 ## 🎥 2. 플레이 영상 (Gameplay Video)
 
-> *아래 이미지를 클릭하면 플레이 영상을 시청할 수 있습니다. (YouTube)*
+> *아래 링크를 클릭하면 유튜브에서 고화질로 시청할 수 있습니다. (YouTube)*
 
-[![Gameplay Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+[유튜브에서 보기](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
 ---
 
