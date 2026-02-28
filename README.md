@@ -29,6 +29,26 @@
 
 [유튜브에서 보기](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
+### 메인메뉴 설명
+
+https://github.com/user-attachments/assets/08556ad7-3f5f-4681-85f7-af2bcddab710
+
+### 로비 설명
+
+https://github.com/user-attachments/assets/e6ce7e65-6b4a-4ab7-bad6-3b3355ada88d
+
+### 과일 게임 설명
+
+
+
+### 미로 게임 설명
+
+
+
+### 퀴즈 게임 설명
+
+https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
+
 ---
 
 ## 🛠️ 3. 사용 기술 (Tech Stack)
