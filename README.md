@@ -25,10 +25,6 @@
 
 ## 🎥 2. 플레이 영상 (Gameplay Video)
 
-> *아래 링크를 클릭하면 유튜브에서 고화질로 시청할 수 있습니다. (YouTube)*
-
-[유튜브에서 보기](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
-
 ### 메인메뉴 설명
 
 https://github.com/user-attachments/assets/08556ad7-3f5f-4681-85f7-af2bcddab710
@@ -39,11 +35,11 @@ https://github.com/user-attachments/assets/e6ce7e65-6b4a-4ab7-bad6-3b3355ada88d
 
 ### 과일 게임 설명
 
-
+https://github.com/user-attachments/assets/2a747485-3d5a-4303-8409-9b373c8d959f
 
 ### 미로 게임 설명
 
-
+https://github.com/user-attachments/assets/e2016d0f-6a71-4a60-be45-46d8475533fc
 
 ### 퀴즈 게임 설명
 
