@@ -16,19 +16,19 @@ class NOOBGAME_API ANoobGameCharacter : public ACharacter
 public:
     ANoobGameCharacter();
 
-    // --- ÇÁ·¹ÀÓ¿öÅ© ±âº» ÀÎÅÍÆäÀÌ½º ---
+    // --- í”„ë ˆì„ì›Œí¬ ê¸°ë³¸ ì¸í„°í˜ì´ìŠ¤ ---
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    // ½Ã¼± ÀÔ·Â Ã³¸®
+    // ì‹œì„  ì…ë ¥ ì²˜ë¦¬
     UFUNCTION(BlueprintCallable, Category = "Input")
     void Turn(float Value);
     UFUNCTION(BlueprintCallable, Category = "Input")
     void LookUp(float Value);
 
-    // --- Ä«¸Ş¶ó ¹× ¼³Á¤ ---
+    // --- ì¹´ë©”ë¼ ë° ì„¤ì • ---
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
     float CameraSensitivity;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
@@ -37,7 +37,7 @@ public:
     bool ReverseY;
 
 
-    // --- ÀüÅõ ¹× ÇÇÇØ Ã³¸® ---
+    // --- ì „íˆ¬ ë° í”¼í•´ ì²˜ë¦¬ ---
     virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
     UFUNCTION(Server, Reliable)
@@ -49,11 +49,11 @@ public:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_PlayEndGameAnim(bool bIsWinner);
 
-    // --- »óÅÂ ¹× ¾Ö´Ï¸ŞÀÌ¼Ç ---
+    // --- ìƒíƒœ ë° ì• ë‹ˆë©”ì´ì…˜ ---
     void SetDownState_Server(bool bInDown);
     FORCEINLINE bool GetIsDown() const { return bIsDown; }
 
-    // °ø°İ ¹× ¹İÀÀ ¸ùÅ¸ÁÖ ¾Ö¼Â
+    // ê³µê²© ë° ë°˜ì‘ ëª½íƒ€ì£¼ ì• ì…‹
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     UAnimMontage* LeftPunchMontage;
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
@@ -75,7 +75,7 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Result")
     UAnimMontage* DefeatMontage;
 
-    // --- ¿Àµğ¿À ¾Ö¼Â ---
+    // --- ì˜¤ë””ì˜¤ ì• ì…‹ ---
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
     USoundBase* HitSound;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
@@ -86,7 +86,7 @@ public:
     USoundAttenuation* KnockdownAttenuation;
 
 protected:
-    // ±âÀı »óÅÂ º¹Á¦ º¯¼ö
+    // ê¸°ì ˆ ìƒíƒœ ë³µì œ ë³€ìˆ˜
     UPROPERTY(ReplicatedUsing = OnRep_IsDown)
     bool bIsDown;
 
@@ -95,7 +95,7 @@ protected:
 
     void EnableMovementAfterRecovery();
 
-    // Ä«¸Ş¶ó ³ôÀÌ Á¶Àı ½Ã½ºÅÛ (ÃÖÀûÈ­ Å¸ÀÌ¸Ó ±â¹İ)
+    // ì¹´ë©”ë¼ ë†’ì´ ì¡°ì ˆ ì‹œìŠ¤í…œ (ìµœì í™” íƒ€ì´ë¨¸ ê¸°ë°˜)
     FTimerHandle CameraInterpTimerHandle;
     float TargetCameraZ;
     void UpdateCameraHeight();
@@ -104,4 +104,7 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     class UCameraComponent* FirstPersonCameraComponent;
+
+    // ê³µê²© ì¢…ë£Œ ì‹œ ì‹¤í–‰ë  í•¨ìˆ˜ (ì„œë²„ ê¶Œí•œ)
+    void ResetAttackState();
 };
