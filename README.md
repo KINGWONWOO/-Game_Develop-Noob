@@ -20,8 +20,7 @@
     *   **프로젝트 전 과정 습득:** 아이디어 기획부터 아트 리소스 제작(리깅, 애니메이션), 프로그래밍, 빌드 및 배포까지 1인 개발의 전체 파이프라인 경험.
     *   언리얼 엔진의 **Replication(네트워크 동기화)** 시스템 심층 이해 및 구현 (Dedicated Server 기반 구조 설계).
     *   확장 가능한 모듈형 게임 아키텍처 설계 (다양한 장르의 미니게임을 하나의 프로젝트에 통합).
-
----
+    *   **OpenClaw** 자동화 실무 적용
 
 ## 🎥 2. 플레이 영상 (Gameplay Video)
 
@@ -67,9 +66,49 @@ https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
 *   **Git LFS**: 대용량 에셋(.blend, .uasset) 관리
 
 ---
-## 🎮 4. 레벨 구성도 및 구현
 
-### 4.1 메인메뉴
+## 🔗 4. 멀티플레이 환경 구성
+
+![Project Logo](Doc/Images/System.png)
+
+*   멀티플레이 환경은 Steam Online Subsystem(OSS) 기반으로 구축했습니다. 대중성과 안정적인 기능 지원을 고려해 채택했습니다.
+*   테스트는 단일 PC 환경에서의 동시 실행 검증을 위해 Sandboxie-Plus를 활용했습니다.
+*   네트워크 구조는 Listen Server 기반 P2P 매치메이킹을 기준으로 설계하고 각 기능을 구현했습니다.
+*   옵션 데이터는 SaveGame 클래스를 통해 사용자별로 분리 저장되도록 설계했습니다.
+
+## 🔗 5. 네트워크 동기화를 위해 구현한 기능
+
+![Project Logo](Doc/Images/Network.png)
+
+### RPC
+*   **사용 목적** : 서버 권위 모델을 기반으로 클라이언트의 임의 데이터 조작을 원천 차단하고, 통신 주체별 RPC 설계를 통해 네트워크 신뢰성과 응답성을 동시에 확보하기 위해 도입했습니다.
+*   **실제 적용** : 
+         - Server RPC : 과일 게임에서 클라이언트의 정답 제출을 서버로 전달.
+         - Client RPC : 정답이 틀릴 경우 오답 갯수를 해당 유저에게만 노출.
+         - NetMulticast : 정답일 시 모든 유저에게 승자를 알려주는 텍스트 노출.
+### Property Replication
+*   **사용 목적** : 모든 플레이어가 동일한 게임 상태를 공유하도록 하여 경쟁 게임의 공정성을 확보하기 위해 도입했습니다.
+*   **실제 적용** : 미니게임의 남은 시간을 모든 클라이언트가 오차 없이 인지하도록 동기화
+### RepNotify
+*   **사용 목적** : 불필요한 패킷 전송을 줄이고, 변수 값이 변경되는 정확한 시점에 시각적/청각적 피드백을 제공하여 네트워크 효율성을 높이기 위해 도입했습니다.
+*   **실제 적용** : 게임 종료 시 OnRep_ 함수를 통해 즉시 폭죽 VFX와 사운드 재생.
+
+## 🔗 6. OpenClaw를 활용한 퀴즈 업데이트 자동화 과정
+*   **아이디어** : 고정된 퀴즈 리스트로 인한 유저 지루함 및 패턴 고착화 방지 필요했습니다. 이에, 로컬에 접속 가능한 OpenClaw를 활용해 퀴즈 리스트 JSON 자동 업데이트 시스템을 구축했습니다.
+*   **과정** :
+         1. 확장성과 파싱 효율을 고려하여 퀴즈 DB를 JSON 포맷으로 규격화
+         2. 프로젝트 폴더에 트리거(TRIGGER_UPDATE.txt)를 생성하는 Bat 파일 생성
+          ```
+         @echo off
+         echo WAKE UP > "E:\NoobGame\TRIGGER_UPDATE.txt"
+          ```
+         3. 작업 스케쥴러를 통해 매주 월요일 23:00 해당 Bat 파일이 실행되도록 예약
+          ![Project Logo](Doc/Images/Schedule.png)
+         4. OpenClaw의 HeartBeat 기능을 커스텀하여 트리거 파일 감지 시 퀴즈 JSON 업데이트 수행.
+
+## 🎮 7. 레벨 구성도 및 구현
+
+### 7.1 메인메뉴
 <img src="Doc/Images/MainMenu.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **역할**: 사용자 경험(UX)을 고려한 직관적인 UI를 제공하며, Steam Online Subsystem을 통해 멀티플레이 세션을 생성하거나 초대 받아 게임에 진입하는 게이트웨이 역할을 합니다.
@@ -77,7 +116,7 @@ https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
    - 세션 관리: Find Sessions와 Create Session 기능을 UI 버튼과 바인딩하여, 서버 브라우저를 통해 다른 플레이어의 방에 입장할 수 있도록 구현했습니다.
    - 애니메이션 UI: WBP_MainMenu 위젯에서 버튼 호버 이펙트 및 레벨 전환 시 페이드 인/아웃 처리를 통해 시각적 완성도를 높였습니다.
 
-### 4.2 로비 및 NPC AI (Lobby & NPC AI)
+### 7.2 로비 및 NPC AI (Lobby & NPC AI)
 <img src="Doc/Images/Lobby.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **역할**: 플레이어가 게임 진입 전 대기하는 허브 공간입니다. 단순 UI 방식에서 벗어나 맵 내 배치된 상호작용 Actor를 통해 Steam 친구 초대, 미니게임 선택, NPC 대화 등 인게임 월드와 유기적으로 연결된 활동이 가능하도록 설계했습니다.
@@ -134,7 +173,7 @@ void AMyNPC::StartDialogue(APlayerController* PC)
 ```
 </details>
 
-### 4.3 과일 게임 (Fruit Game)
+### 7.3 과일 게임 (Fruit Game)
 <img src="Doc/Images/FruitGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **진행 방식**: 1v1 턴제 기반 추리 게임입니다. 서버는 각 플레이어에게 고유한 과일 정답 조합(`SecretAnswers`)을 부여하며, 플레이어는 매 턴 상대의 조합을 추측합니다. 서버는 일치 개수를 계산해 양측 클라이언트에 동기화합니다.
@@ -179,7 +218,7 @@ void AFruitGameMode::ProcessPlayerGuess(AController* PlayerController, const TAr
 ```
 </details>
 
-### 4.4 미로 게임 (Maze Game)
+### 7.4 미로 게임 (Maze Game)
 <img src="Doc/Images/MazeGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **진행 방식**: 서버에서 생성된 시드(Seed)값을 기반으로 모든 플레이어에게 동일한 구조의 미로를 절차적으로 생성합니다. 플레이어들은 미로 속에서 먼저 탈출하기 위해 경쟁합니다.
@@ -292,7 +331,7 @@ void AMazeGenerate::GenerateRandomPropData(TArray<FMazePropData>& OutData)
 ```
 </details>
 
-### 4.5 퀴즈 게임 (Quiz Game)
+### 7.5 퀴즈 게임 (Quiz Game)
 <img src="Doc/Images/QuizGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **진행 방식**: 플레이어는 전방에서 다가오는 퀴즈 장애물(QuizObstacle)을 마주하게 됩니다. 장애물에는 문제와 선택지(O/X 또는 다지선다)가 표시되며, 플레이어는 제한 시간 내에 정답 구역으로 이동해야 합니다. 게임이 진행될수록 장애물의 이동 속도가 단계적으로 상승합니다.
@@ -345,24 +384,24 @@ void AOXQuizGameMode::SpawnNextQuizObstacle()
 
 ---
 
-## 📚 5. 기술 문서 (Technical Docs)
+## 📚 8. 기술 문서 (Technical Docs)
 
-### 5.1 네트워크 아키텍처 (Network Architecture)
+### 8.1 네트워크 아키텍처 (Network Architecture)
 * **Steam Online Subsystem 통합**: Steam SDK를 기반으로 세션 생성(CreateSession), 검색(FindSessions), 참여(JoinSession) 로직을 구현하여 별도의 IP 입력 없이도 매칭이 가능하도록 설계했습니다.
 * **State Management**: `ANoobGameStateBase`를 상속받은 각 게임 모드별 State(`MazeGameState`, `FruitGameState`)에서 게임 진행 상태(남은 시간, 점수, 단계)를 관리하며, `OnRep_` 함수를 통해 클라이언트 UI에 실시간으로 동기화합니다.
 * **Authority Logic**: Steam P2P 환경에서 발생할 수 있는 데이터 위변조를 방지하기 위해 모든 주요 판정(점수 획득, 승리 조건)은 서버(`HasAuthority`)에서 처리하도록 엄격히 분리했습니다.
 
-### 5.2 캐릭터 시스템 및 애니메이션
+### 8.2 캐릭터 시스템 및 애니메이션
 * **Modular Character Design**: `ANoobGameCharacter`를 베이스로 확장성을 고려해 각 미니게임에 맞는 캐릭터를 파생 설계했습니다.
 * **Retargeting Optimization**: 서로 다른 스켈레톤 구조를 가진 에셋 간의 애니메이션 호환성을 위해 IK Rig 및 IK Retargeter를 활용하여 본 매핑을 최적화했습니다.
 
-### 5.3 데이터 관리 및 안정성
+### 8.3 데이터 관리 및 안정성
 * **Data-Driven Design**: 미니게임의 설정값(제한 시간, 목표 점수, 퀴즈 문항)을 `UDataTable`로 관리하여 코드 수정 없이 밸런싱이 가능한 구조를 구축했습니다.
 * **Version Control (Git LFS)**: Steam SDK 바이너리와 언리얼 엔진의 대용량 에셋(.uasset, .umap) 충돌 및 용량 관리를 위해 Git LFS를 운용하여 안정적인 협업 환경을 유지했습니다.
 
 ---
 
-## 📂 6. 프로젝트 구조 (Project Structure)
+## 📂 9. 프로젝트 구조 (Project Structure)
 
 ```
 C:/Users/qudtn/UnrealEngine/NoobGame
@@ -387,7 +426,7 @@ C:/Users/qudtn/UnrealEngine/NoobGame
 
 ---
 
-## 🐛 7. 트러블 슈팅 (Troubleshooting)
+## 🐛 10. 트러블 슈팅 (Troubleshooting)
 
 ### 이슈 1: 애니메이션 리타겟팅 시 메쉬 뭉개짐
 *   **문제**: 서로 다른 체형)의 캐릭터에 동일한 애니메이션을 적용할 때, 뼈대 구조 차이로 인해 메쉬가 비정상적으로 늘어나거나 뭉개지는 현상 발생.
