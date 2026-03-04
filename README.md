@@ -98,14 +98,12 @@ https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
 *   **과정** :
          * 확장성과 파싱 효율을 고려하여 퀴즈 DB를 JSON 포맷으로 규격화
          * 트리거 생성 Bat 파일 제작
-
+         * 작업 스케쥴러를 통해 매주 월요일 23:00 실행 예약
+         * OpenClaw의 HeartBeat 기능을 커스텀하여 퀴즈 JSON 업데이트 수행
 ```batch
 @echo off
 echo WAKE UP > "E:\NoobGame\TRIGGER_UPDATE.txt"
 ```
-
-         * 작업 스케쥴러를 통해 매주 월요일 23:00 실행 예약
-         * OpenClaw의 HeartBeat 기능을 커스텀하여 퀴즈 JSON 업데이트 수행
 
 ## 🎮 7. 레벨 구성도 및 구현
 
