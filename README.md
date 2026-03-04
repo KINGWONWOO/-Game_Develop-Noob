@@ -99,11 +99,10 @@ https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
          1. 확장성과 파싱 효율을 고려하여 퀴즈 DB를 JSON 포맷으로 규격화
     
          2. 프로젝트 폴더에 트리거(TRIGGER_UPDATE.txt)를 생성하는 Bat 파일 생성
-    
-          ```
-         @echo off
-         echo WAKE UP > "E:\NoobGame\TRIGGER_UPDATE.txt"
-          ```
+```
+@echo off
+echo WAKE UP > "E:\NoobGame\TRIGGER_UPDATE.txt"
+```
     
          3. 작업 스케쥴러를 통해 매주 월요일 23:00 해당 Bat 파일이 실행되도록 예약
           ![Project Logo](Doc/Images/Schedule.png)
