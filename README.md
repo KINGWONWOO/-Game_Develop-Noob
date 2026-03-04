@@ -96,16 +96,16 @@ https://github.com/user-attachments/assets/a65cd33b-5add-4331-88d7-b9d11cbe08e7
 ## 🔗 6. OpenClaw를 활용한 퀴즈 업데이트 자동화 과정
 *   **아이디어** : 고정된 퀴즈 리스트로 인한 유저 지루함 및 패턴 고착화 방지 필요했습니다. 이에, 로컬에 접속 가능한 OpenClaw를 활용해 퀴즈 리스트 JSON 자동 업데이트 시스템을 구축했습니다.
 *   **과정** :
-         - 확장성과 파싱 효율을 고려하여 퀴즈 DB를 JSON 포맷으로 규격화
-         - 트리거 생성 Bat 파일 제작
+         * 확장성과 파싱 효율을 고려하여 퀴즈 DB를 JSON 포맷으로 규격화
+         * 트리거 생성 Bat 파일 제작
 
 ```batch
 @echo off
 echo WAKE UP > "E:\NoobGame\TRIGGER_UPDATE.txt"
 ```
 
-         - 작업 스케쥴러를 통해 매주 월요일 23:00 실행 예약
-         - OpenClaw의 HeartBeat 기능을 커스텀하여 퀴즈 JSON 업데이트 수행
+         * 작업 스케쥴러를 통해 매주 월요일 23:00 실행 예약
+         * OpenClaw의 HeartBeat 기능을 커스텀하여 퀴즈 JSON 업데이트 수행
 
 ## 🎮 7. 레벨 구성도 및 구현
 
