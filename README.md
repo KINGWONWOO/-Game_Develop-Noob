@@ -334,7 +334,7 @@ void AMazeGenerate::GenerateRandomPropData(TArray<FMazePropData>& OutData)
 <img src="Doc/Images/QuizGame.png" width="400" height="225" style="aspect-ratio: 16/9; object-fit: cover;">
 
 * **진행 방식**: 플레이어는 전방에서 다가오는 퀴즈 장애물(QuizObstacle)을 마주하게 됩니다. 장애물에는 문제와 선택지(O/X 또는 다지선다)가 표시되며, 플레이어는 제한 시간 내에 정답 구역으로 이동해야 합니다. 게임이 진행될수록 장애물의 이동 속도가 단계적으로 상승합니다.
-* **승리 방식**: 장애물 충돌 없이 끝까지 생존하거나, 준비된 모든 퀴즈 리스트를 소진했을 때 최종 점수가 더 높은 플레이어가 승리합니다. 오답 구역에 머물러 장애물에 충돌할 경우 즉시 탈락 처리됩니다.
+* **승리 방식**: 오래 살아남은 플레이어가 승리합니다. 오답 구역에 머물러 장애물에 충돌할 경우 즉시 탈락 처리됩니다.
 * **구현 내용**:
    - Data-Driven Quiz System: UDataTable을 활용하여 문제 내용, 선택지 개수, 정답 데이터를 구조화했습니다. 이를 통해 코드 수정 없이도 퀴즈 콘텐츠를 손쉽게 확장하거나 편집할 수 있도록 설계했습니다.
    - Dynamic Obstacle Spawning: 퀴즈 데이터의 선택지 개수에 따라 2지선다 또는 3지선다용 장애물 클래스를 동적으로 선택하여 스폰하는 로직을 구현했습니다.
@@ -447,6 +447,16 @@ C:/Users/qudtn/UnrealEngine/NoobGame
 *   **문제**: 절차적으로 생성된 미로에서 도착 지점(Goal Trigger)이 맵 밖이나 벽 속에 생성되어 게임 클리어가 불가능한 버그.
 *   **해결**: 미로 생성 알고리즘(`MazeGenerate.cpp`)에서 `PathEnd` 좌표 계산 로직을 디버깅하여, 그리드 인덱스와 월드 좌표 변환 과정의 오차를 수정하고 생성 후 `Overlapping` 체크를 추가하여 유효한 위치인지 검증하는 로직 추가.
 
+### 이슈 6: UE 5.6 마이그레이션 및 AI 협업 리팩토링
+*   **문제**: 엔진 버전 업그레이드(UE 5.4 ➔ 5.6)로 인해 기존 BindAction, BindAxis 방식의 입력 시스템과 이전 버전의 카메라 관련 API 에서 수많은 C4996(Deprecated) 경고 및 빌드 에러 발생.
+*   **해결**: 효율적인 리팩토링을 위해 GitHub Copilot과 VS 도구를 전략적으로 활용했습니다.
+*   **AI 기반 코드 분석 및 최신화 (Copilot 활용)**: 단순 수정을 넘어, Copilot에게 문맥(Context)을 제공하여 최신 API 기반의 코드를 생성하도록 요청했습니다. 이에 기존 BindAxis/BindAction 구조를 Input Mapping Context + Input Action 기반 구조로 재설계
+*   **클래스 및 심볼 일괄 수정 (Refactoring Tools)**: 대규모 심볼 변경은 Refactoring Tool을 활용하여 프로젝트 전체 참조를 일괄 안전 수정했습니다.  Deprecated API는 업데이트된 CameraComponent 인터페이스에 맞춰 수정하고 불필요한 레거시 의존성은 제거했습니다.
+
+### 이슈 7: 공격 시스템의 'State Lock 현상 해결
+*   **문제**: 1vs1 대전 중 공격 연타 시, 특정 시점부터 공격 입력이 무시되고 캐릭터가 굳어버리는 현상.
+*   **해결**: 클라이언트 이벤트에만 의존하는 상태 전이 구조는 네트워크 환경에서 비결정적이며, 서버 권위 기반의 상태 보장 로직이 필요하다고 판단했습니다.
+이에, 서버에서 최대 공격 시간을 기준으로 상태를 강제 초기화하는 Authority 기반 Fail-Safe 구조를 설계해 해당 문제를 해결했습니다.
 ---
 
 *Contact: Wonwoo*
